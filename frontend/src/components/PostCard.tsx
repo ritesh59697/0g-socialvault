@@ -6,16 +6,18 @@ import MediaPreview from '@/components/MediaPreview';
 import ProfileAvatar from '@/components/ProfileAvatar';
 import TransactionLink from '@/components/TransactionLink';
 
-const short = (a: string) => `${a.slice(0,6)}...${a.slice(-4)}`;
+const short = (a: string) => `${a.slice(0, 6)}...${a.slice(-4)}`;
 const timeAgo = (ts: bigint) => {
-  const d = Math.floor(Date.now()/1000) - Number(ts);
+  const d = Math.floor(Date.now() / 1000) - Number(ts);
   if (d < 60) return 'just now';
-  if (d < 3600) return `${Math.floor(d/60)}m ago`;
-  if (d < 86400) return `${Math.floor(d/3600)}h ago`;
-  return `${Math.floor(d/86400)}d ago`;
+  if (d < 3600) return `${Math.floor(d / 60)}m ago`;
+  if (d < 86400) return `${Math.floor(d / 3600)}h ago`;
+  return `${Math.floor(d / 86400)}d ago`;
 };
 const isTextPost = (hash: string) => !hash.startsWith('0x') || hash.length < 60;
 const TIP_PRESETS = ['0.005', '0.01', '0.05'];
+
+const ZERO_G_LOGO = "https://pbs.twimg.com/profile_images/2038084529374867456/Oq74BA_I_400x400.jpg";
 
 export default function PostCard({
   post, isConnected, isWrongNetwork, liked, tipAmount, isTipping,
@@ -38,6 +40,29 @@ export default function PostCard({
   const mediaType = Number(post.mediaType);
   const normalizedTip = tipAmount || '0.01';
   const tipLabel = Number(normalizedTip) > 0 ? `Send ${normalizedTip} 0G` : 'Send Tip';
+
+  const OGLogo = ({ size = 14, glow = true }: { size?: number, glow?: boolean }) => (
+    <div style={{
+      display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+      width: size, height: size, borderRadius: '50%',
+      background: 'linear-gradient(135deg, rgba(255,255,255,0.2), rgba(255,255,255,0.05))',
+      padding: size * 0.1,
+      boxShadow: glow ? `0 0 ${size / 2}px rgba(167, 139, 250, 0.3)` : 'none',
+      border: '1px solid rgba(255,255,255,0.25)',
+      marginRight: 6, flexShrink: 0,
+      position: 'relative', top: -1,
+      overflow: 'hidden'
+    }}>
+      <div style={{
+        position: 'absolute', inset: 0,
+        background: 'linear-gradient(110deg, transparent 40%, rgba(255,255,255,0.4) 50%, transparent 60%)',
+        backgroundSize: '200% 100%',
+        animation: 'shimmer 3s infinite linear',
+        zIndex: 1
+      }} />
+      <img src={ZERO_G_LOGO} alt="0G" style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover', position: 'relative', zIndex: 0 }} />
+    </div>
+  );
 
   return (
     <div className="glass-panel fade-up" style={{
@@ -114,40 +139,47 @@ export default function PostCard({
       </div>
 
       {/* Actions */}
-      <div className="post-actions" style={{ display: 'flex', alignItems: 'center', gap: 16, paddingTop: 16, borderTop: '1px solid var(--border)' }}>
-        <button onClick={onLike} disabled={!isConnected || isWrongNetwork} className="secondary-btn" style={{
-          display: 'flex', alignItems: 'center', gap: 6, padding: '8px 16px',
-          borderRadius: 24, fontSize: 13, fontWeight: 600,
-          background: liked ? 'rgba(239,68,68,0.1)' : 'transparent',
-          border: `1px solid ${liked ? 'rgba(239,68,68,0.3)' : 'var(--border)'}`,
-          color: liked ? 'var(--error)' : 'var(--text-muted)',
-          cursor: isConnected && !isWrongNetwork ? 'pointer' : 'not-allowed',
-        }}>
-          <span style={{ fontSize: 16 }}>{liked ? '❤️' : '🤍'}</span> {post.likeCount.toString()}
+      <div className="post-actions" style={{ 
+        display: 'flex', alignItems: 'center', gap: 12, paddingTop: 16, borderTop: '1px solid var(--border)' 
+      }}>
+        <button 
+          onClick={onLike} 
+          disabled={!isConnected || isWrongNetwork} 
+          className={`secondary-btn ${liked ? 'liked-pulse' : ''}`}
+          style={{
+            display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px',
+            borderRadius: 24, fontSize: 13, fontWeight: 600,
+            background: liked ? 'rgba(239,68,68,0.08)' : 'transparent',
+            border: `1px solid ${liked ? 'rgba(239,68,68,0.2)' : 'var(--border)'}`,
+            color: liked ? '#ef4444' : 'var(--text-muted)',
+            cursor: isConnected && !isWrongNetwork ? 'pointer' : 'not-allowed',
+            transition: 'all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
+            transform: liked ? 'scale(1.05)' : 'scale(1)',
+          }}
+        >
+          <span style={{ fontSize: 16, transition: 'transform 0.2s' }}>{liked ? '❤️' : '🤍'}</span> 
+          {post.likeCount.toString()}
         </button>
 
         <div className="tip-panel" style={{
           display: 'flex',
           flexDirection: 'column',
-          gap: 10,
-          padding: 12,
+          gap: 8,
+          padding: '10px 14px',
           borderRadius: 16,
-          background: 'linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01))',
+          background: 'var(--bg-secondary)',
           border: '1px solid var(--border)',
-          minWidth: 320,
+          minWidth: 280,
           flex: 1,
         }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}>
-            <div>
-              <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)' }}>Support this creator</div>
-              <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>Pick an amount or enter your own in 0G.</div>
-            </div>
-            <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-faint)', textTransform: 'uppercase', letterSpacing: 0.4 }}>
-              Tip
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text)' }}>Support Creator</div>
+            <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-faint)', textTransform: 'uppercase', letterSpacing: 0.5 }}>
+              Tip in <OGLogo size={10} />
             </span>
           </div>
 
-          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
             {TIP_PRESETS.map((preset) => {
               const active = normalizedTip === preset;
               return (
@@ -157,54 +189,58 @@ export default function PostCard({
                   onClick={() => onTipAmountChange(preset)}
                   className="secondary-btn"
                   style={{
-                    padding: '7px 12px',
-                    borderRadius: 999,
-                    fontSize: 12,
+                    padding: '5px 10px',
+                    borderRadius: 8,
+                    fontSize: 11,
                     fontWeight: 700,
-                    background: active ? 'rgba(34,211,238,0.12)' : 'transparent',
-                    borderColor: active ? 'rgba(34,211,238,0.34)' : 'var(--border)',
-                    color: active ? 'var(--accent2)' : 'var(--text-muted)',
+                    background: active ? 'rgba(236,72,153,0.08)' : 'transparent',
+                    borderColor: active ? 'rgba(236,72,153,0.3)' : 'var(--border)',
+                    color: active ? 'var(--accent)' : 'var(--text-muted)',
                   }}
                 >
-                  {preset} 0G
+                  {preset}
                 </button>
               );
             })}
           </div>
 
-          <div className="tip-controls" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <div className="tip-controls" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <div style={{
               display: 'flex',
               alignItems: 'center',
-              gap: 8,
-              padding: '0 12px',
-              minHeight: 44,
-              borderRadius: 14,
-              background: 'var(--bg-secondary)',
+              gap: 6,
+              padding: '0 10px',
+              minHeight: 36,
+              borderRadius: 10,
+              background: 'var(--bg)',
               border: '1px solid var(--border)',
               flex: 1,
             }}>
-              <span style={{ color: 'var(--text-faint)', fontSize: 12, fontWeight: 700 }}>0G</span>
+              <OGLogo size={12} />
               <input type="number" min="0" step="0.001" value={normalizedTip} onChange={e => onTipAmountChange(e.target.value)} style={{
                 width: '100%',
                 background: 'transparent',
                 border: 'none',
                 color: 'var(--text)',
-                fontSize: 15,
+                fontSize: 14,
                 outline: 'none',
                 fontWeight: 700,
               }} />
             </div>
-            <button onClick={onTip} disabled={!isConnected || isWrongNetwork || isTipping || Number(normalizedTip) <= 0} className="primary-btn" style={{
-              minHeight: 44,
-              padding: '0 18px',
-              borderRadius: 14,
-              fontSize: 13,
-              whiteSpace: 'nowrap',
-              opacity: isConnected && !isWrongNetwork && !isTipping && Number(normalizedTip) > 0 ? 1 : 0.55,
-              cursor: isConnected && !isWrongNetwork && !isTipping && Number(normalizedTip) > 0 ? 'pointer' : 'not-allowed',
-            }}>
-              {isTipping ? 'Sending...' : tipLabel}
+            <button 
+              onClick={onTip} 
+              disabled={!isConnected || isWrongNetwork || isTipping || Number(normalizedTip) <= 0} 
+              className="primary-btn" 
+              style={{
+                minHeight: 36,
+                padding: '0 14px',
+                borderRadius: 10,
+                fontSize: 12,
+                whiteSpace: 'nowrap',
+                background: 'var(--accent)',
+              }}
+            >
+              {isTipping ? 'Sending...' : `Send ${normalizedTip} 0G`}
             </button>
           </div>
         </div>

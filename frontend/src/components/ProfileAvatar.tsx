@@ -13,21 +13,37 @@ export default function ProfileAvatar({
   size?: number;
 }) {
   const [customAvatar, setCustomAvatar] = useState<string | null>(null);
+  const [imgError, setImgError] = useState(false);
   
   useEffect(() => {
-    if (address) {
-      const saved = localStorage.getItem(`sv_avatar_${address.toLowerCase()}`);
-      if (saved) setCustomAvatar(saved);
-    }
+    const load = () => {
+      if (address) {
+        const saved = localStorage.getItem(`sv_avatar_${address.toLowerCase()}`);
+        if (saved) {
+          setCustomAvatar(saved);
+          setImgError(false);
+        } else {
+          setCustomAvatar(null);
+        }
+      }
+    };
+    load();
+    window.addEventListener('sv_profile_updated', load);
+    return () => window.removeEventListener('sv_profile_updated', load);
   }, [address]);
 
-  if (customAvatar) {
+  if (customAvatar && !imgError) {
     return (
       <div style={{
         width: size, height: size, borderRadius: '50%', overflow: 'hidden',
         border: '1px solid var(--border)', flexShrink: 0, background: 'var(--bg-secondary)'
       }}>
-        <img src={customAvatar} alt="Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+        <img 
+          src={customAvatar} 
+          alt="Avatar" 
+          onError={() => setImgError(true)}
+          style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+        />
       </div>
     );
   }

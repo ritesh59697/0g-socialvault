@@ -4,8 +4,9 @@ import { useEffect, useState } from 'react';
 import { SOCIALVAULT_ABI, SOCIALVAULT_ADDRESS } from '@/lib/contract';
 import Sidebar from './Sidebar';
 import Header from './Header';
+import Footer from './Footer';
 
-type Tab = 'feed' | 'explore' | 'profile' | 'about';
+type Tab = 'home' | 'feed' | 'explore' | 'profile' | 'about';
 
 export default function AppShell({
   children,
@@ -20,10 +21,29 @@ export default function AppShell({
   const { connect, connectors } = useConnect();
   const { disconnect } = useDisconnect();
   const { switchChain } = useSwitchChain();
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [theme, setTheme] = useState<'dark' | 'light'>('light');
 
   useEffect(() => {
     if (isConnected && chain?.id !== 16661) switchChain({ chainId: 16661 });
   }, [isConnected, chain?.id, switchChain]);
+
+  useEffect(() => {
+    const saved = localStorage.getItem('sv-theme') as 'dark' | 'light' | null;
+    if (saved) { 
+      setTheme(saved); 
+      document.documentElement.setAttribute('data-theme', saved); 
+    } else {
+      document.documentElement.setAttribute('data-theme', 'light');
+    }
+  }, []);
+
+  const toggleTheme = () => {
+    const next = theme === 'dark' ? 'light' : 'dark';
+    setTheme(next);
+    document.documentElement.setAttribute('data-theme', next);
+    localStorage.setItem('sv-theme', next);
+  };
 
   const { data: feedData } = useReadContract({
     address: SOCIALVAULT_ADDRESS, abi: SOCIALVAULT_ABI,
@@ -35,7 +55,6 @@ export default function AppShell({
   const doSwitch = () => switchChain({ chainId: 16661 });
   const doConnect = () => {
     if (connectors.length > 0) {
-      // Prioritize injected connectors (like MetaMask)
       const injected = connectors.find(c => c.id === 'injected');
       connect({ connector: injected || connectors[0] });
     } else {
@@ -43,12 +62,10 @@ export default function AppShell({
     }
   };
 
-  // If setActiveTab is not provided (e.g. on a dedicated page), we just handle navigation via links
   const handleTabChange = (t: Tab) => {
     if (setActiveTab) {
       setActiveTab(t);
-    } else {
-      // Logic for navigation if needed, but usually the sidebar handles buttons
+      setIsSidebarOpen(false); // Close sidebar on mobile after selection
     }
   };
 
@@ -60,8 +77,14 @@ export default function AppShell({
         total={total} 
         isConnected={isConnected} 
         isWrongNetwork={!!isWrongNetwork} 
-        onSwitchChain={doSwitch} 
         address={address}
+        onSwitchChain={doSwitch} 
+        isOpen={isSidebarOpen}
+        onClose={() => setIsSidebarOpen(false)}
+        onConnect={doConnect}
+        onDisconnect={() => disconnect()}
+        theme={theme}
+        onToggleTheme={toggleTheme}
       />
 
       <div className="app-scroll">
@@ -71,12 +94,17 @@ export default function AppShell({
           isConnected={isConnected} 
           isWrongNetwork={!!isWrongNetwork} 
           onConnect={doConnect} 
-          onDisconnect={() => disconnect()} 
+          onDisconnect={() => disconnect()}
+          onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
+          theme={theme}
+          onToggleTheme={toggleTheme}
         />
 
         <main className="app-rail app-main">
           {children}
         </main>
+
+        <Footer />
       </div>
     </div>
   );

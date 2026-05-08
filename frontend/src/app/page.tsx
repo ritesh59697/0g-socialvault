@@ -13,7 +13,9 @@ import ExploreView from '@/components/ExploreView';
 import ProfileView from '@/components/ProfileView';
 import AboutView from '@/components/AboutView';
 
-type Tab = 'feed' | 'explore' | 'profile' | 'about';
+import LandingView from '@/components/LandingView';
+
+type Tab = 'home' | 'feed' | 'explore' | 'profile' | 'about';
 
 export default function Home() {
   const { address, isConnected, chain } = useAccount();
@@ -24,14 +26,14 @@ export default function Home() {
   const { switchChain } = useSwitchChain();
   const { data: connectorClient } = useConnectorClient();
 
-  const [activeTab, setActiveTab] = useState<Tab>('feed');
+  const [activeTab, setActiveTab] = useState<Tab>('home');
 
   useEffect(() => {
     const tab = searchParams.get('tab') as Tab;
-    if (tab && ['feed', 'explore', 'profile', 'about'].includes(tab)) {
+    if (tab && ['home', 'feed', 'explore', 'profile', 'about'].includes(tab)) {
       setActiveTab(tab);
     } else {
-      setActiveTab('feed');
+      setActiveTab('home');
     }
   }, [searchParams]);
 
@@ -150,6 +152,21 @@ export default function Home() {
     try {
       setTippingPostId(postId.toString());
       await writeContractAsync({ address: SOCIALVAULT_ADDRESS, abi: SOCIALVAULT_ABI, functionName: 'tipPost', args: [postId], value: parseEther(amount) });
+      
+      // Track tip in local storage for the dashboard
+      const post = orderedPosts.find((p: any) => p.id === postId);
+      if (post) {
+        const addr = post.author.toLowerCase();
+        const tipRecord = { 
+          from: address?.slice(0, 6) + '...' + address?.slice(-4), 
+          amount: amount, 
+          time: 'just now', 
+          id: Date.now() 
+        };
+        const existing = JSON.parse(localStorage.getItem(`sv_tips_${addr}`) || '[]');
+        localStorage.setItem(`sv_tips_${addr}`, JSON.stringify([tipRecord, ...existing]));
+      }
+
       setTimeout(() => refreshFeed(false), 2500);
     } catch (e: any) { console.error(e); }
     finally { setTippingPostId(null); }
@@ -157,6 +174,14 @@ export default function Home() {
 
   return (
     <AppShell activeTab={activeTab} setActiveTab={setActiveTab}>
+      {activeTab === 'home' && (
+        <LandingView 
+          onNavigate={setActiveTab} 
+          onConnect={doConnect} 
+          isConnected={isConnected} 
+          address={address} 
+        />
+      )}
       {activeTab === 'feed' && (
         <div className="tab-panel">
           {isConnected ? (
@@ -173,21 +198,33 @@ export default function Home() {
             </div>
           )}
 
-          <div className="section-heading-row" style={{ minHeight: 34, marginBottom: 20, marginTop: 10 }}>
-            <h2 style={{ fontSize: 18, fontWeight: 600, color: 'var(--text)' }}>Latest Activity</h2>
-            <button onClick={() => refreshFeed()} disabled={isFetching || refreshingFeed} className="secondary-btn" style={{
-              minWidth: 154,
-              borderRadius: 999,
-              padding: '8px 16px',
-              fontSize: 13,
-              fontWeight: 700,
-              opacity: isFetching || refreshingFeed ? 0.7 : 1,
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 8,
-            }}>
-              {(isFetching || refreshingFeed) ? <span className="mini-spinner" /> : <span>↻</span>}
-              {(isFetching || refreshingFeed) ? 'Refreshing Feed' : 'Refresh Feed'}
+          <div className="section-heading-row" style={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'space-between', 
+            marginBottom: 24, 
+            marginTop: 12 
+          }}>
+            <h2 style={{ fontSize: 18, fontWeight: 700, color: 'var(--text)', margin: 0 }}>Latest Activity</h2>
+            <button 
+              onClick={() => refreshFeed()} 
+              disabled={isFetching || refreshingFeed} 
+              className="secondary-btn" 
+              style={{
+                borderRadius: 12,
+                padding: '8px 16px',
+                fontSize: 13,
+                fontWeight: 700,
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 8,
+                background: 'var(--bg-secondary)',
+                border: '1px solid var(--border)',
+                transition: 'all 0.2s'
+              }}
+            >
+              {(isFetching || refreshingFeed) ? <span className="mini-spinner" /> : <span style={{ fontSize: 16 }}>↻</span>}
+              {(isFetching || refreshingFeed) ? 'Syncing...' : 'Refresh Feed'}
             </button>
           </div>
 
@@ -235,7 +272,22 @@ export default function Home() {
         </div>
       )}
       {activeTab === 'explore' && <ExploreView />}
-      {activeTab === 'profile' && <ProfileView address={address} isConnected={isConnected} posts={orderedPosts} onConnect={doConnect} connectedAddress={address} />}
+      {activeTab === 'profile' && (
+        <ProfileView
+          address={address}
+          isConnected={isConnected}
+          posts={orderedPosts}
+          onConnect={doConnect}
+          connectedAddress={address}
+          onLike={handleLike}
+          onTip={handleTip}
+          isTipping={!!tippingPostId}
+          tipAmounts={tipAmounts}
+          setTipAmounts={setTipAmounts}
+          likedPosts={likedPosts}
+          isWrongNetwork={isWrongNetwork}
+        />
+      )}
       {activeTab === 'about' && <AboutView />}
     </AppShell>
   );

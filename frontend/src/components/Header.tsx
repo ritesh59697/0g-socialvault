@@ -1,32 +1,22 @@
 'use client';
 import { useEffect, useState } from 'react';
 
-type Tab = 'feed' | 'explore' | 'profile' | 'about';
+type Tab = 'home' | 'feed' | 'explore' | 'profile' | 'about';
 
 export default function Header({
   activeTab, address, isConnected, isWrongNetwork,
-  onConnect, onDisconnect
+  onConnect, onDisconnect, onToggleSidebar,
+  theme, onToggleTheme
 }: {
   activeTab: Tab; address?: string; isConnected: boolean; isWrongNetwork: boolean;
-  onConnect: () => void; onDisconnect: () => void;
+  onConnect: () => void; onDisconnect: () => void; onToggleSidebar: () => void;
+  theme: 'dark' | 'light'; onToggleTheme: () => void;
 }) {
-  const [theme, setTheme] = useState<'dark' | 'light'>('dark');
   const short = (a: string) => `${a.slice(0, 6)}...${a.slice(-4)}`;
-
-  useEffect(() => {
-    const saved = localStorage.getItem('sv-theme') as 'dark' | 'light' | null;
-    if (saved) { setTheme(saved); document.documentElement.setAttribute('data-theme', saved); }
-  }, []);
-
-  function toggleTheme() {
-    const next = theme === 'dark' ? 'light' : 'dark';
-    setTheme(next);
-    document.documentElement.setAttribute('data-theme', next);
-    localStorage.setItem('sv-theme', next);
-  }
 
   const getPageTitle = () => {
     switch (activeTab) {
+      case 'home': return 'Welcome to SocialVault';
       case 'feed': return 'Global Feed';
       case 'explore': return 'Explore';
       case 'profile': return 'My Profile';
@@ -43,20 +33,32 @@ export default function Header({
       borderBottom: '1px solid var(--border)',
     }}>
       <div className="app-rail app-header-inner">
-        <div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <button 
+            onClick={onToggleSidebar} 
+            className="secondary-btn mobile-only" 
+            style={{ 
+              width: 40, height: 40, borderRadius: 10, padding: 0, 
+              display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20 
+            }}
+          >
+            ☰
+          </button>
           <h1 style={{ fontSize: 20, fontWeight: 600, color: 'var(--text)', margin: 0 }}>{getPageTitle()}</h1>
         </div>
 
         <div className="header-actions">
-          <button onClick={toggleTheme} className="secondary-btn" style={{
-            width: 38, height: 38, borderRadius: '50%',
+          <button onClick={onToggleTheme} className="secondary-btn desktop-only" style={{
+            width: 38, height: 38, borderRadius: 12,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             fontSize: 16,
+            background: 'var(--bg-secondary)',
+            border: '1px solid var(--border)'
           }}>
             {theme === 'dark' ? '☀️' : '🌙'}
           </button>
 
-          <div className="glass-panel" style={{
+          <div className="glass-panel desktop-only" style={{
             display: 'flex', alignItems: 'center', gap: 6, padding: '6px 14px',
             borderRadius: 24, fontSize: 13, fontWeight: 500,
             background: isWrongNetwork ? 'rgba(239,68,68,0.05)' : 'rgba(16,185,129,0.05)',
@@ -68,8 +70,8 @@ export default function Header({
             {isWrongNetwork ? 'Wrong Network' : '0G Mainnet'}
           </div>
 
-          {isConnected ? (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          {isConnected && address ? (
+            <div className="desktop-only" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <div className="glass-panel" style={{
                 padding: '8px 16px', borderRadius: 24, fontSize: 13,
                 color: 'var(--text)', fontWeight: 500, boxShadow: 'none'
@@ -81,7 +83,7 @@ export default function Header({
               }}>Disconnect</button>
             </div>
           ) : (
-            <button onClick={onConnect} className="primary-btn" style={{
+            <button onClick={onConnect} className="primary-btn desktop-only" style={{
               padding: '9px 20px', borderRadius: 24, fontSize: 14,
             }}>Connect Wallet</button>
           )}

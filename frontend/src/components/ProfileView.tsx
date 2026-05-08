@@ -1,17 +1,32 @@
 import { useState, useMemo, useEffect } from 'react';
 import MediaPreview from '@/components/MediaPreview';
 import ProfileAvatar from '@/components/ProfileAvatar';
+import PostCard from '@/components/PostCard';
 import { formatEther } from 'viem';
+
+const ZERO_G_LOGO = "https://pbs.twimg.com/profile_images/2038084529374867456/Oq74BA_I_400x400.jpg";
+
+const OGLogo = ({ size = 20 }: { size?: number }) => (
+  <img src={ZERO_G_LOGO} alt="0G" style={{ width: size, height: size, borderRadius: '50%' }} />
+);
 
 export default function ProfileView({
   address, isConnected, posts, onConnect, isOwnProfile = true, connectedAddress,
+  onLike, onTip, isTipping, tipAmounts, setTipAmounts, likedPosts, isWrongNetwork
 }: {
-  address?: string; 
-  isConnected: boolean; 
-  posts: any[]; 
+  address?: string;
+  isConnected: boolean;
+  posts: any[];
   onConnect: () => void;
   isOwnProfile?: boolean;
   connectedAddress?: string;
+  onLike?: (id: bigint) => void;
+  onTip?: (id: bigint) => void;
+  isTipping?: boolean;
+  tipAmounts?: Record<string, string>;
+  setTipAmounts?: (a: Record<string, string>) => void;
+  likedPosts?: Set<string>;
+  isWrongNetwork?: boolean;
 }) {
   const [activeSubTab, setActiveSubTab] = useState<'posts' | 'earnings' | 'info'>('posts');
   const [bio, setBio] = useState('');
@@ -32,26 +47,25 @@ export default function ProfileView({
       setBio(localStorage.getItem(`sv_bio_${addr}`) || '');
       setUsername(localStorage.getItem(`sv_name_${addr}`) || '');
       setAvatarUrl(localStorage.getItem(`sv_avatar_${addr}`) || '');
-      
+
       const savedFollowers = localStorage.getItem(`sv_followers_${addr}`);
       if (savedFollowers) setFollowers(JSON.parse(savedFollowers));
 
       // Simulated tipping history for demo
       const savedTips = localStorage.getItem(`sv_tips_${addr}`);
       if (savedTips) {
-        setTips(JSON.parse(savedTips));
-      } else if (isOwnProfile) {
-        // Mock data if empty
-        const mockTips = [
-          { from: '0x882...1a2b', amount: '0.05', time: '2 hours ago', id: 1 },
-          { from: '0x3c1...9f0d', amount: '0.12', time: '5 hours ago', id: 2 },
-          { from: '0x9a2...4e1c', amount: '0.01', time: 'Yesterday', id: 3 },
-        ];
-        setTips(mockTips);
-        localStorage.setItem(`sv_tips_${addr}`, JSON.stringify(mockTips));
+        const parsed = JSON.parse(savedTips);
+        // Filter out the legacy mock data (IDs 1, 2, 3)
+        const realTips = parsed.filter((t: any) => t.id !== 1 && t.id !== 2 && t.id !== 3);
+        setTips(realTips);
+        
+        // If we found and removed mock data, update storage to keep it clean
+        if (realTips.length !== parsed.length) {
+          localStorage.setItem(`sv_tips_${addr}`, JSON.stringify(realTips));
+        }
       }
     }
-    
+
     if (connectedAddress) {
       const savedFollowing = localStorage.getItem(`sv_following_${connectedAddress.toLowerCase()}`);
       if (savedFollowing) setFollowing(JSON.parse(savedFollowing));
@@ -59,7 +73,7 @@ export default function ProfileView({
   }, [address, connectedAddress, isOwnProfile]);
 
   // Filter posts for this specific profile
-  const profilePosts = useMemo(() => 
+  const profilePosts = useMemo(() =>
     address ? posts.filter((p: any) => p.author.toLowerCase() === address.toLowerCase()) : [],
     [posts, address]
   );
@@ -76,7 +90,7 @@ export default function ProfileView({
       }}>
         <div style={{ fontSize: 48, marginBottom: 16 }}>👤</div>
         <p style={{ color: 'var(--text-muted)', marginBottom: 24, fontSize: 16 }}>
-          {isOwnProfile ? 'Connect your wallet to view your 0G profile' : 'Connect your wallet to view this profile'}
+          {isOwnProfile ? 'Connect your wallet to view your 0G profile' : 'Connect your wallet to view this 0G profile'}
         </p>
         <button onClick={onConnect} className="primary-btn" style={{
           padding: '12px 28px', borderRadius: 24, fontSize: 15,
@@ -114,6 +128,7 @@ export default function ProfileView({
     localStorage.setItem(`sv_bio_${addr}`, tempBio);
     localStorage.setItem(`sv_name_${addr}`, tempUsername);
     localStorage.setItem(`sv_avatar_${addr}`, tempAvatarUrl);
+    window.dispatchEvent(new Event('sv_profile_updated'));
   };
 
   const startEditing = () => {
@@ -133,24 +148,47 @@ export default function ProfileView({
     { label: 'Followers', value: followers.length.toString(), color: 'var(--accent2)', icon: '👥' },
   ];
 
+  const OGLogo = ({ size = 16, glow = true }: { size?: number, glow?: boolean }) => (
+    <div style={{
+      display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+      width: size, height: size, borderRadius: '50%',
+      background: 'linear-gradient(135deg, rgba(255,255,255,0.2), rgba(255,255,255,0.05))',
+      padding: size * 0.1,
+      boxShadow: glow ? `0 0 ${size / 2}px rgba(167, 139, 250, 0.3)` : 'none',
+      border: '1px solid rgba(255,255,255,0.25)',
+      marginRight: 6, flexShrink: 0,
+      position: 'relative', top: -1,
+      overflow: 'hidden'
+    }}>
+      <div style={{
+        position: 'absolute', inset: 0,
+        background: 'linear-gradient(110deg, transparent 40%, rgba(255,255,255,0.4) 50%, transparent 60%)',
+        backgroundSize: '200% 100%',
+        animation: 'shimmer 3s infinite linear',
+        zIndex: 1
+      }} />
+      <img src={ZERO_G_LOGO} alt="0G" style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover', position: 'relative', zIndex: 0 }} />
+    </div>
+  );
+
   return (
     <div className="fade-up tab-panel">
       {/* Header Section */}
       <div className="glass-panel" style={{
         padding: 32, marginBottom: 24, position: 'relative', overflow: 'hidden'
       }}>
-        <div style={{ 
-          position: 'absolute', top: -50, right: -50, width: 200, height: 200, 
-          background: 'var(--accent-glow)', filter: 'blur(80px)', borderRadius: '50%', opacity: 0.3, zIndex: 0 
+        <div style={{
+          position: 'absolute', top: -50, right: -50, width: 200, height: 200,
+          background: 'var(--accent-glow)', filter: 'blur(80px)', borderRadius: '50%', opacity: 0.3, zIndex: 0
         }} />
 
         <div style={{ position: 'relative', zIndex: 1 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 24, marginBottom: 32 }}>
             <div style={{ position: 'relative' }}>
               <ProfileAvatar address={address} size={84} />
-              <div style={{ 
-                position: 'absolute', bottom: 4, right: 4, width: 18, height: 18, 
-                background: 'var(--success)', borderRadius: '50%', border: '3px solid var(--bg-primary)' 
+              <div style={{
+                position: 'absolute', bottom: 4, right: 4, width: 18, height: 18,
+                background: 'var(--success)', borderRadius: '50%', border: '3px solid var(--bg-primary)'
               }} />
             </div>
             <div style={{ flex: 1 }}>
@@ -161,8 +199,8 @@ export default function ProfileView({
                       {username || (isOwnProfile ? 'Your Profile' : short(address))}
                     </h2>
                     {isOwnProfile && (
-                      <span style={{ 
-                        fontSize: 11, padding: '4px 10px', borderRadius: 20, 
+                      <span style={{
+                        fontSize: 11, padding: '4px 10px', borderRadius: 20,
                         background: 'var(--accent-glow)', color: 'var(--accent)', fontWeight: 700,
                         textTransform: 'uppercase', letterSpacing: 1
                       }}>Owner</span>
@@ -174,7 +212,7 @@ export default function ProfileView({
                 </div>
 
                 {!isOwnProfile && isConnected && (
-                  <button 
+                  <button
                     onClick={isFollowing ? handleUnfollow : handleFollow}
                     className={isFollowing ? 'secondary-btn' : 'primary-btn'}
                     style={{ padding: '10px 24px', borderRadius: 24, fontSize: 14 }}
@@ -183,7 +221,7 @@ export default function ProfileView({
                   </button>
                 )}
                 {isOwnProfile && (
-                  <button 
+                  <button
                     onClick={startEditing}
                     className="secondary-btn"
                     style={{ padding: '8px 16px', borderRadius: 24, fontSize: 13, display: 'flex', alignItems: 'center', gap: 6 }}
@@ -219,7 +257,10 @@ export default function ProfileView({
                   <span style={{ fontSize: 16 }}>{s.icon}</span>
                   <div style={{ fontSize: 11, color: 'var(--text-faint)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.8 }}>{s.label}</div>
                 </div>
-                <div style={{ fontSize: 24, fontWeight: 800, color: s.color }}>{s.value}</div>
+                <div style={{ fontSize: 24, fontWeight: 800, color: s.color, display: 'flex', alignItems: 'center' }}>
+                  {s.label === 'Total Tips' && <OGLogo size={22} />}
+                  {s.value}
+                </div>
               </div>
             ))}
           </div>
@@ -227,8 +268,8 @@ export default function ProfileView({
       </div>
 
       {/* Tabs / Dashboard Navigation */}
-      <div style={{ 
-        display: 'flex', gap: 8, marginBottom: 24, padding: 6, 
+      <div style={{
+        display: 'flex', gap: 8, marginBottom: 24, padding: 6,
         background: 'var(--bg-secondary)', borderRadius: 16, border: '1px solid var(--border)',
         width: 'fit-content'
       }}>
@@ -237,7 +278,7 @@ export default function ProfileView({
           { key: 'earnings', label: 'Creator Dashboard', icon: '📊' },
           { key: 'info', label: 'Profile Info', icon: 'ℹ️' },
         ].map(t => (
-          <button 
+          <button
             key={t.key}
             onClick={() => setActiveSubTab(t.key as any)}
             style={{
@@ -266,38 +307,22 @@ export default function ProfileView({
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
               {profilePosts.map((post: any) => (
-                <div key={post.id.toString()} className="glass-panel" style={{
-                  padding: 24, transition: 'all 0.2s', border: '1px solid var(--border)'
-                }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}>
-                    <div style={{ fontSize: 12, color: 'var(--text-faint)', fontWeight: 600 }}>Post #{post.id.toString()}</div>
-                    <div style={{ fontSize: 12, color: 'var(--accent)', fontWeight: 700 }}>
-                      {Number(post.mediaType) === 0 ? 'TEXT' : Number(post.mediaType) === 1 ? 'IMAGE' : 'VIDEO'}
-                    </div>
-                  </div>
-                  
-                  <div style={{ fontSize: 16, color: 'var(--text)', lineHeight: 1.6, marginBottom: 20 }}>
-                    {Number(post.mediaType) === 0 || !post.storageRootHash.startsWith('0x') || post.storageRootHash.length < 60
-                      ? post.storageRootHash
-                      : (
-                        <MediaPreview
-                          mediaRootHash={post.storageRootHash}
-                          metadataRootHash={post.metadataRootHash}
-                          mediaType={Number(post.mediaType)}
-                          compact
-                        />
-                      )
+                <PostCard
+                  key={post.id.toString()}
+                  post={post}
+                  isConnected={isConnected}
+                  isWrongNetwork={!!isWrongNetwork}
+                  liked={likedPosts?.has(post.id.toString()) || false}
+                  tipAmount={tipAmounts?.[post.id.toString()] || '0.01'}
+                  isTipping={isTipping}
+                  onLike={() => onLike?.(post.id)}
+                  onTip={() => onTip?.(post.id)}
+                  onTipAmountChange={(v) => {
+                    if (setTipAmounts && tipAmounts) {
+                      setTipAmounts({ ...tipAmounts, [post.id.toString()]: v });
                     }
-                  </div>
-
-                  <div style={{ 
-                    display: 'flex', gap: 24, paddingTop: 16, borderTop: '1px solid var(--border-subtle)',
-                    fontSize: 13, color: 'var(--text-muted)', fontWeight: 600
-                  }}>
-                      <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>❤️ {post.likeCount.toString()} Likes</span>
-                    <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>💰 {formatEther(post.tipTotal || 0).slice(0, 6)} 0G Earned</span>
-                  </div>
-                </div>
+                  }}
+                />
               ))}
             </div>
           )}
@@ -308,20 +333,24 @@ export default function ProfileView({
         <div className="fade-up">
           <div className="glass-panel" style={{ padding: 32, border: '1px solid var(--border)' }}>
             <h3 style={{ fontSize: 18, fontWeight: 700, marginBottom: 24, display: 'flex', alignItems: 'center', gap: 8 }}>
-              📊 Revenue Overview
+              <OGLogo size={20} /> Revenue Overview
             </h3>
-            
+
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 20, marginBottom: 32 }}>
               <div style={{ padding: 24, borderRadius: 20, background: 'linear-gradient(135deg, rgba(139,92,246,0.1), rgba(6,182,212,0.1))', border: '1px solid var(--border)' }}>
                 <div style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase', marginBottom: 8 }}>Total Tips Received</div>
-                <div style={{ fontSize: 32, fontWeight: 800, color: 'var(--text)' }}>{formatEther(totalEarnings).slice(0, 8)} 0G</div>
+                <div style={{ fontSize: 32, fontWeight: 800, color: 'var(--text)', display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <OGLogo size={32} /> {formatEther(totalEarnings).slice(0, 8)} <span style={{ fontSize: 16, opacity: 0.7 }}>0G</span>
+                </div>
                 {totalEarnings > BigInt(0) && (
                   <div style={{ fontSize: 12, color: 'var(--success)', marginTop: 8, fontWeight: 600 }}>↑ 100% since start</div>
                 )}
               </div>
               <div style={{ padding: 24, borderRadius: 20, background: 'var(--bg-secondary)', border: '1px solid var(--border)' }}>
                 <div style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase', marginBottom: 8 }}>Estimated Payout</div>
-                <div style={{ fontSize: 32, fontWeight: 800, color: 'var(--text)' }}>{formatEther(totalEarnings).slice(0, 8)} 0G</div>
+                <div style={{ fontSize: 32, fontWeight: 800, color: 'var(--text)', display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <OGLogo size={32} /> {formatEther(totalEarnings).slice(0, 8)} <span style={{ fontSize: 16, opacity: 0.7 }}>0G</span>
+                </div>
                 <div style={{ fontSize: 12, color: 'var(--text-faint)', marginTop: 8 }}>Standard 0G Mainnet processing</div>
               </div>
             </div>
@@ -330,8 +359,8 @@ export default function ProfileView({
             <div style={{ border: '1px solid var(--border)', borderRadius: 16, overflow: 'hidden', background: 'var(--bg-secondary)' }}>
               {tips.length === 0 ? (
                 <div style={{ padding: 48, textAlign: 'center' }}>
-                   <div style={{ fontSize: 24, marginBottom: 12 }}>🍃</div>
-                   <p style={{ color: 'var(--text-muted)' }}>No tips received yet.</p>
+                  <div style={{ fontSize: 24, marginBottom: 12 }}>🍃</div>
+                  <p style={{ color: 'var(--text-muted)' }}>No tips received yet.</p>
                 </div>
               ) : (
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14 }}>
@@ -366,21 +395,21 @@ export default function ProfileView({
         <div className="fade-up">
           <div className="glass-panel" style={{ padding: 32, border: '1px solid var(--border)' }}>
             <h3 style={{ fontSize: 18, fontWeight: 700, marginBottom: 24 }}>👤 Profile Details</h3>
-            
+
             <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
               {isEditing ? (
                 <div className="fade-up" style={{ display: 'flex', flexDirection: 'column', gap: 24, padding: 24, background: 'rgba(139,92,246,0.03)', borderRadius: 20, border: '1px solid var(--accent-glow)' }}>
                   <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--accent)', marginBottom: 4 }}>Edit Profile Settings</div>
-                  
+
                   <div>
                     <label style={{ fontSize: 12, color: 'var(--text-faint)', fontWeight: 700, textTransform: 'uppercase', marginBottom: 8, display: 'block' }}>Display Name</label>
-                    <input 
+                    <input
                       type="text"
                       value={tempUsername}
                       onChange={e => setTempUsername(e.target.value)}
                       placeholder="Enter username..."
-                      style={{ 
-                        width: '100%', padding: '12px 16px', background: 'var(--surface)', 
+                      style={{
+                        width: '100%', padding: '12px 16px', background: 'var(--surface)',
                         border: '1px solid var(--border)', borderRadius: 12, color: 'var(--text)',
                         fontSize: 14, outline: 'none'
                       }}
@@ -388,29 +417,47 @@ export default function ProfileView({
                   </div>
 
                   <div>
-                    <label style={{ fontSize: 12, color: 'var(--text-faint)', fontWeight: 700, textTransform: 'uppercase', marginBottom: 8, display: 'block' }}>Avatar URL</label>
-                    <input 
-                      type="text"
-                      value={tempAvatarUrl}
-                      onChange={e => setTempAvatarUrl(e.target.value)}
-                      placeholder="https://example.com/photo.jpg"
-                      style={{ 
-                        width: '100%', padding: '12px 16px', background: 'var(--surface)', 
-                        border: '1px solid var(--border)', borderRadius: 12, color: 'var(--text)',
-                        fontSize: 14, outline: 'none'
-                      }}
-                    />
-                    <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 6 }}>Custom avatars stored on-chain or via 0G Storage URL.</div>
+                    <label style={{ fontSize: 12, color: 'var(--text-faint)', fontWeight: 700, textTransform: 'uppercase', marginBottom: 8, display: 'block' }}>Profile Picture</label>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+                      <label className="secondary-btn" style={{ 
+                        display: 'inline-flex', padding: '10px 20px', borderRadius: 20, cursor: 'pointer',
+                        fontSize: 13, fontWeight: 600, border: '1px dashed var(--border)', background: 'rgba(255,255,255,0.03)'
+                      }}>
+                        <span>📸 Upload Photo</span>
+                        <input 
+                          type="file" 
+                          accept="image/*" 
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) {
+                              const reader = new FileReader();
+                              reader.onloadend = () => {
+                                setTempAvatarUrl(reader.result as string);
+                              };
+                              reader.readAsDataURL(file);
+                            }
+                          }}
+                          style={{ display: 'none' }} 
+                        />
+                      </label>
+                      {tempAvatarUrl && (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                          <img src={tempAvatarUrl} alt="Preview" style={{ width: 40, height: 40, borderRadius: '50%', objectFit: 'cover', border: '1px solid var(--border)' }} />
+                          <button onClick={() => setTempAvatarUrl('')} style={{ background: 'none', border: 'none', color: 'var(--error)', cursor: 'pointer', fontSize: 12 }}>Remove</button>
+                        </div>
+                      )}
+                    </div>
+                    <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 6 }}>Upload a square image for best results.</div>
                   </div>
 
                   <div>
                     <label style={{ fontSize: 12, color: 'var(--text-faint)', fontWeight: 700, textTransform: 'uppercase', marginBottom: 8, display: 'block' }}>Bio</label>
-                    <textarea 
+                    <textarea
                       value={tempBio}
                       onChange={e => setTempBio(e.target.value)}
                       placeholder="Tell the world about yourself..."
-                      style={{ 
-                        width: '100%', minHeight: 120, padding: 16, background: 'var(--surface)', 
+                      style={{
+                        width: '100%', minHeight: 120, padding: 16, background: 'var(--surface)',
                         border: '1px solid var(--border)', borderRadius: 12, color: 'var(--text)',
                         fontSize: 14, outline: 'none', resize: 'vertical'
                       }}
@@ -426,8 +473,8 @@ export default function ProfileView({
                 <>
                   <div>
                     <div style={{ fontSize: 12, color: 'var(--text-faint)', fontWeight: 700, textTransform: 'uppercase', marginBottom: 8 }}>Wallet Address</div>
-                    <div style={{ 
-                      padding: '12px 16px', background: 'var(--bg-secondary)', borderRadius: 12, 
+                    <div style={{
+                      padding: '12px 16px', background: 'var(--bg-secondary)', borderRadius: 12,
                       fontFamily: 'monospace', fontSize: 14, color: 'var(--text)', border: '1px solid var(--border)',
                       wordBreak: 'break-all'
                     }}>
@@ -439,8 +486,8 @@ export default function ProfileView({
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
                       <div style={{ fontSize: 12, color: 'var(--text-faint)', fontWeight: 700, textTransform: 'uppercase' }}>Bio</div>
                     </div>
-                    <div style={{ 
-                      padding: '24px', background: 'var(--bg-secondary)', borderRadius: 12, 
+                    <div style={{
+                      padding: '24px', background: 'var(--bg-secondary)', borderRadius: 12,
                       fontSize: 14, color: bio ? 'var(--text)' : 'var(--text-muted)', border: '1px solid var(--border)',
                       fontStyle: bio ? 'normal' : 'italic', lineHeight: 1.6
                     }}>
