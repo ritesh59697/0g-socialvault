@@ -32,22 +32,31 @@ export default function Header({
       backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)',
       borderBottom: '1px solid var(--border)',
     }}>
-      <div className="app-rail app-header-inner">
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <button 
-            onClick={onToggleSidebar} 
-            className="secondary-btn mobile-only" 
-            style={{ 
-              width: 40, height: 40, borderRadius: 10, padding: 0, 
-              display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20 
-            }}
-          >
-            ☰
-          </button>
-          <h1 style={{ fontSize: 20, fontWeight: 600, color: 'var(--text)', margin: 0 }}>{getPageTitle()}</h1>
-        </div>
+      <div className="app-rail app-header-inner mobile-header-grid">
+        <button 
+          onClick={onToggleSidebar} 
+          className="secondary-btn mobile-only" 
+          style={{ 
+            width: 40, height: 40, borderRadius: 10, padding: 0, 
+            display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20 
+          }}
+        >
+          ☰
+        </button>
+        
+        <h1 className="header-title" style={{ 
+          fontSize: 18, 
+          fontWeight: 700, 
+          color: 'var(--text)', 
+          margin: 0,
+          textAlign: 'center'
+        }}>
+          {getPageTitle()}
+        </h1>
 
-        <div className="header-actions">
+        <div className="mobile-only" style={{ width: 40 }} /> {/* Spacer to keep title centered */}
+        
+        <div className="header-actions desktop-only">
           <button onClick={onToggleTheme} className="secondary-btn desktop-only" style={{
             width: 38, height: 38, borderRadius: 12,
             display: 'flex', alignItems: 'center', justifyContent: 'center',

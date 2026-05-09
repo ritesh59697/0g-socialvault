@@ -474,13 +474,18 @@ input[type=number]::-webkit-inner-spin-button {
     -webkit-overflow-scrolling: touch;
   }
 
-  .app-header-inner {
-    height: auto;
-    padding: 14px 0;
-    flex-direction: column;
+  .mobile-header-grid {
+    display: grid !important;
+    grid-template-columns: 40px 1fr 40px;
     align-items: center;
-    text-align: center;
-    gap: 12px;
+    width: 100%;
+  }
+
+  .app-header-inner {
+    height: 64px !important;
+    padding: 0 !important;
+    flex-direction: row !important;
+    justify-content: space-between !important;
   }
 
   .header-actions {

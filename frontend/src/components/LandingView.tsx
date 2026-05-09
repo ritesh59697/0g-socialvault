@@ -4,9 +4,9 @@ import ProfileAvatar from './ProfileAvatar';
 
 const ZERO_G_LOGO = "https://pbs.twimg.com/profile_images/2038084529374867456/Oq74BA_I_400x400.jpg";
 
-export default function LandingView({ 
-  onNavigate, onConnect, isConnected, address 
-}: { 
+export default function LandingView({
+  onNavigate, onConnect, isConnected, address
+}: {
   onNavigate: (tab: any) => void;
   onConnect: () => void;
   isConnected: boolean;
@@ -24,7 +24,7 @@ export default function LandingView({
   return (
     <div className="fade-up" style={{ paddingTop: 80, paddingBottom: 100, position: 'relative', overflowX: 'hidden', minHeight: '100vh', background: 'var(--bg)' }}>
       {/* Immersive Background Atmosphere (Seamless & Full Width) */}
-      <div style={{ 
+      <div style={{
         position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
         background: `
           radial-gradient(circle at 50% 0%, var(--accent-glow) 0%, transparent 90%),
@@ -33,7 +33,7 @@ export default function LandingView({
         `,
         zIndex: 0, pointerEvents: 'none'
       }} />
-      
+
       {/* Hero Section */}
       <section style={{
         position: 'relative',
@@ -42,19 +42,19 @@ export default function LandingView({
         zIndex: 1
       }}>
         <div style={{ position: 'relative', zIndex: 1, maxWidth: 900, margin: '0 auto' }}>
-          <div style={{ 
-            display: 'inline-flex', alignItems: 'center', gap: 10, padding: '8px 18px', 
+          <div style={{
+            display: 'inline-flex', alignItems: 'center', gap: 10, padding: '8px 18px',
             borderRadius: 30, fontSize: 11, fontWeight: 800, color: 'var(--accent)',
-            marginBottom: 32, background: 'var(--accent-glow)', textTransform: 'uppercase', 
+            marginBottom: 32, background: 'var(--accent-glow)', textTransform: 'uppercase',
             letterSpacing: 1.5, border: '1px solid var(--accent-glow)'
           }}>
             <img src={ZERO_G_LOGO} alt="0G" style={{ width: 18, height: 18, borderRadius: '50%' }} /> 0G Native SocialFi
           </div>
 
-          <h1 style={{ 
-            fontSize: 'clamp(40px, 8vw, 72px)', 
-            fontWeight: 900, 
-            lineHeight: 1.05, 
+          <h1 style={{
+            fontSize: 'clamp(40px, 8vw, 72px)',
+            fontWeight: 900,
+            lineHeight: 1.05,
             letterSpacing: '-0.03em',
             marginBottom: 24,
             color: 'var(--text)',
@@ -64,44 +64,44 @@ export default function LandingView({
             <span className="text-gradient">Powered by 0G Storage.</span>
           </h1>
 
-          <p style={{ 
-            fontSize: 'clamp(16px, 2vw, 20px)', 
-            color: 'var(--text-muted)', 
+          <p style={{
+            fontSize: 'clamp(16px, 2vw, 20px)',
+            color: 'var(--text-muted)',
             lineHeight: 1.6,
             maxWidth: 750,
             margin: '0 auto 48px',
             fontWeight: 500
           }}>
-            SocialVault is a high-performance decentralized SocialFi platform. 
-            Post images, videos, and content that lives permanently on 0G Storage 
+            SocialVault is a high-performance decentralized SocialFi platform.
+            Post images, videos, and content that lives permanently on 0G Storage
             with lightning-fast access and near-zero fees.
           </p>
 
-          <div style={{ 
-            display: 'flex', 
-            flexWrap: 'wrap', 
-            justifyContent: 'center', 
+          <div style={{
+            display: 'flex',
+            flexWrap: 'wrap',
+            justifyContent: 'center',
             gap: 20,
             marginBottom: 64
           }}>
-            <button 
+            <button
               onClick={() => onNavigate('feed')}
-              className="primary-btn" 
+              className="primary-btn"
               style={{ padding: '18px 40px', borderRadius: 32, fontSize: 16, fontWeight: 800 }}
             >
               🚀 Explore Feed
             </button>
-            <button 
+            <button
               onClick={() => onNavigate('profile')}
-              className="secondary-btn" 
+              className="secondary-btn"
               style={{ padding: '18px 40px', borderRadius: 32, fontSize: 16, fontWeight: 800, background: 'var(--bg)', border: '1px solid var(--border)' }}
             >
               📊 Creator Dashboard
             </button>
             {mounted && !isConnected && (
-              <button 
+              <button
                 onClick={onConnect}
-                className="secondary-btn" 
+                className="secondary-btn"
                 style={{ padding: '18px 40px', borderRadius: 32, fontSize: 16, fontWeight: 800, background: 'rgba(255,255,255,0.03)', border: '1px dashed var(--border)' }}
               >
                 👛 Connect Wallet
@@ -133,8 +133,8 @@ export default function LandingView({
       <div className="app-rail">
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 32 }}>
           {features.map((f, i) => (
-            <div key={i} className="fade-up" style={{ 
-              padding: 40, 
+            <div key={i} className="fade-up" style={{
+              padding: 40,
               animationDelay: `${i * 0.1}s`,
               borderRadius: 32,
               background: 'var(--bg-secondary)',
@@ -143,8 +143,8 @@ export default function LandingView({
               flexDirection: 'column',
               gap: 16
             }}
-            onMouseOver={e => (e.currentTarget.style.transform = 'translateY(-8px)')}
-            onMouseOut={e => (e.currentTarget.style.transform = 'translateY(0)')}
+              onMouseOver={e => (e.currentTarget.style.transform = 'translateY(-8px)')}
+              onMouseOut={e => (e.currentTarget.style.transform = 'translateY(0)')}
             >
               <div style={{ fontSize: 40, marginBottom: 8 }}>{f.icon}</div>
               <h3 style={{ fontSize: 22, fontWeight: 800, color: 'var(--text)' }}>{f.title}</h3>
@@ -153,9 +153,9 @@ export default function LandingView({
           ))}
         </div>
 
-        <div className="glass-panel fade-up" style={{ 
-          marginTop: 100, 
-          padding: '80px 40px', 
+        <div className="glass-panel fade-up" style={{
+          marginTop: 100,
+          padding: '80px 40px',
           borderRadius: 48,
           textAlign: 'center',
           position: 'relative',
@@ -164,7 +164,7 @@ export default function LandingView({
           border: '1px solid var(--accent-glow)'
         }}>
           <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: '100%', height: '100%', background: 'radial-gradient(circle at 50% 50%, var(--accent-glow) 0%, transparent 70%)', opacity: 0.5, pointerEvents: 'none' }} />
-          
+
           <h2 style={{ fontSize: 40, fontWeight: 900, marginBottom: 20, position: 'relative', color: 'var(--text)' }}>The Social Layer for Web 4.0</h2>
           <p style={{ color: 'var(--text-muted)', fontSize: 18, marginBottom: 40, maxWidth: 650, margin: '0 auto 40px', position: 'relative', lineHeight: 1.6, fontWeight: 500 }}>
             Escape centralized silos. Join the first high-performance social network where you are the sole owner of your digital footprint.

@@ -305,21 +305,30 @@ function HomeContent() {
         </div>
       )}
       {activeTab === 'explore' && <div className="app-rail" style={{ paddingTop: 40 }}><ExploreView /></div>}
-      {activeTab === 'profile' && address && (
+      {activeTab === 'profile' && (
         <div className="app-rail" style={{ paddingTop: 40 }}>
-          <ProfileView 
-            address={address} 
-            posts={orderedPosts}
-            isConnected={isConnected}
-            onConnect={doConnect}
-            connectedAddress={address}
-            onLike={handleLike}
-            onTip={handleTip}
-            likedPosts={likedPosts}
-            tipAmounts={tipAmounts}
-            setTipAmounts={setTipAmounts}
-            isWrongNetwork={!!isWrongNetwork}
-          />
+          {address ? (
+            <ProfileView 
+              address={address} 
+              posts={orderedPosts}
+              isConnected={isConnected}
+              onConnect={doConnect}
+              connectedAddress={address}
+              onLike={handleLike}
+              onTip={handleTip}
+              likedPosts={likedPosts}
+              tipAmounts={tipAmounts}
+              setTipAmounts={setTipAmounts}
+              isWrongNetwork={!!isWrongNetwork}
+            />
+          ) : (
+            <div className="glass-panel fade-up" style={{ padding: 48, textAlign: 'center', maxWidth: 500, margin: '40px auto' }}>
+              <div style={{ fontSize: 48, marginBottom: 20 }}>👤</div>
+              <h2 style={{ fontSize: 24, fontWeight: 800, marginBottom: 12 }}>Connect your wallet</h2>
+              <p style={{ color: 'var(--text-muted)', marginBottom: 32, fontSize: 16 }}>Please connect your wallet to view your personal profile, stats, and tip history.</p>
+              <button onClick={doConnect} className="primary-btn" style={{ padding: '14px 32px', borderRadius: 24, fontSize: 16 }}>Connect Wallet</button>
+            </div>
+          )}
         </div>
       )}
       {activeTab === 'about' && <div className="app-rail" style={{ paddingTop: 40 }}><AboutView /></div>}

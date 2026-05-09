@@ -13,7 +13,7 @@ export default function AboutView() {
       <div className="explore-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 24, marginBottom: 48 }}>
         {/* Core Concept */}
         <div className="glass-panel" style={{ padding: 32 }}>
-          <div style={{ fontSize: 32, marginBottom: 20 }}>🔮</div>
+          <div style={{ fontSize: 32, marginBottom: 20 }}></div>
           <h3 style={{ fontSize: 20, fontWeight: 700, marginBottom: 12, color: 'var(--text)' }}>What is SocialVault?</h3>
           <p style={{ fontSize: 14, color: 'var(--text-muted)', lineHeight: 1.6 }}>
             SocialVault is a sovereign SocialFi platform where users truly own their data. Unlike Web2 platforms that sell your information, SocialVault anchors your digital footprint to a permanent, decentralized ledger.
@@ -22,7 +22,7 @@ export default function AboutView() {
 
         {/* 0G Storage */}
         <div className="glass-panel" style={{ padding: 32 }}>
-          <div style={{ fontSize: 32, marginBottom: 20 }}>⚡</div>
+          <div style={{ fontSize: 32, marginBottom: 20 }}></div>
           <h3 style={{ fontSize: 20, fontWeight: 700, marginBottom: 12, color: 'var(--text)' }}>Powered by 0G Storage</h3>
           <p style={{ fontSize: 14, color: 'var(--text-muted)', lineHeight: 1.6 }}>
             Every image, video, and post you create is sharded and stored on 0G's modular storage network. This ensures your content is permanent, censorship-resistant, and instantly accessible.
@@ -31,7 +31,7 @@ export default function AboutView() {
 
         {/* AI Guardian */}
         <div className="glass-panel" style={{ padding: 32 }}>
-          <div style={{ fontSize: 32, marginBottom: 20 }}>🛡️</div>
+          <div style={{ fontSize: 32, marginBottom: 20 }}></div>
           <h3 style={{ fontSize: 20, fontWeight: 700, marginBottom: 12, color: 'var(--text)' }}>AI Content Guardian</h3>
           <p style={{ fontSize: 14, color: 'var(--text-muted)', lineHeight: 1.6 }}>
             SocialVault features an integrated AI Guardian that analyzes content in real-time before publishing. This ensures a safe ecosystem while maintaining decentralized integrity.

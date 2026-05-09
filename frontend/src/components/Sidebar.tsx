@@ -1,56 +1,48 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-
+import { SOCIALVAULT_ADDRESS } from '@/lib/contract';
 import { Tab } from '@/lib/types';
 
+const TABS: { key: Tab; label: string; icon: string }[] = [
+  { key: 'home',    label: 'Home',        icon: '🏠' },
+  { key: 'feed',    label: 'Global Feed', icon: '📰' },
+  { key: 'explore', label: 'Explore',     icon: '🧭' },
+  { key: 'profile', label: 'My Profile',  icon: '👤' },
+  { key: 'about',   label: 'About',       icon: '✨' },
+];
 
 export default function Sidebar({
-  activeTab, setActiveTab, total, isConnected, isWrongNetwork, onSwitchChain, address,
-  isOpen, onClose, onConnect, onDisconnect,
-  theme, onToggleTheme
+  activeTab, setActiveTab, total, isConnected, isWrongNetwork,
+  onSwitchChain, address, isOpen, onClose,
+  onConnect, onDisconnect, theme, onToggleTheme,
 }: {
   activeTab: Tab; setActiveTab: (t: Tab) => void;
   total: bigint; isConnected: boolean; isWrongNetwork: boolean;
-  onSwitchChain: () => void;
-  address?: string;
-  isOpen: boolean;
-  onClose: () => void;
-  onConnect?: () => void;
-  onDisconnect?: () => void;
-  theme: 'dark' | 'light';
-  onToggleTheme: () => void;
+  onSwitchChain: () => void; address?: string;
+  isOpen: boolean; onClose: () => void;
+  onConnect?: () => void; onDisconnect?: () => void;
+  theme: 'dark' | 'light'; onToggleTheme: () => void;
 }) {
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
 
-  const tabs: { key: Tab; label: string; icon: string; href?: string }[] = [
-    { key: 'home', label: 'Home', icon: '🏠', href: '/?tab=home' },
-    { key: 'feed', label: 'Global Feed', icon: '📰', href: '/?tab=feed' },
-    { key: 'explore', label: 'Explore', icon: '🧭', href: '/?tab=explore' },
-    { key: 'profile', label: 'My Profile', icon: '👤', href: (mounted && address) ? `/profile/${address}` : undefined },
-    { key: 'about', label: 'About', icon: '✨', href: '/?tab=about' },
-  ];
-
-  const valStyle = (c: string) => ({ fontSize: 13, fontWeight: 600 as const, color: c });
+  const short = (a: string) => `${a.slice(0, 6)}···${a.slice(-4)}`;
 
   return (
     <>
       {/* Mobile Overlay */}
       {isOpen && (
-        <div 
-          onClick={onClose}
-          style={{
-            position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', 
-            zIndex: 998, backdropFilter: 'blur(4px)'
-          }} 
-          className="mobile-only"
-        />
+        <div onClick={onClose} style={{
+          position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.55)',
+          backdropFilter: 'blur(4px)', zIndex: 998,
+        }} />
       )}
 
-      <aside className={`sidebar ${isOpen ? 'sidebar-open' : ''}`}>
-        {/* Brand / Logo & Controls */}
+      <aside className={`sidebar ${isOpen ? 'sidebar-open' : ''}`} style={{ zIndex: 999 }}>
+        
+        {/* Brand - PRESERVING ORIGINAL LOGO */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 32 }}>
-          <Link href="/" className="sidebar-brand" style={{ textDecoration: 'none', color: 'inherit' }}>
+          <Link href="/" onClick={() => { setActiveTab('home'); onClose(); }} className="sidebar-brand" style={{ textDecoration: 'none', color: 'inherit' }}>
             <svg width="130" height="28" viewBox="0 0 160 34" fill="none" xmlns="http://www.w3.org/2000/svg">
               <defs>
                 <linearGradient id="logoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -72,49 +64,48 @@ export default function Sidebar({
               <text x="96" y="23" fontFamily="Outfit, sans-serif" fontWeight="700" fontSize="18" fill="url(#textGrad)">Vault</text>
             </svg>
           </Link>
-          
-          <div className="mobile-only" style={{ display: 'flex', flexDirection: 'column', gap: 12, alignItems: 'center' }}>
-            <button onClick={onClose} className="secondary-btn" style={{ 
-              width: 36, height: 36, borderRadius: 10, padding: 0,
+
+          <div className="mobile-only">
+            <button onClick={onClose} style={{
+              width: 32, height: 32, borderRadius: 8,
+              background: 'var(--bg-secondary)', border: '1px solid var(--border)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: 16, background: 'var(--bg-secondary)', border: '1px solid var(--border)'
+              fontSize: 14, cursor: 'pointer', color: 'var(--text-muted)',
             }}>✕</button>
-            
-            <button onClick={onToggleTheme} className="secondary-btn" style={{
-              width: 36, height: 36, borderRadius: 10, padding: 0,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: 14, background: 'var(--bg-secondary)', border: '1px solid var(--border)'
-            }}>
-              {theme === 'dark' ? '☀️' : '🌙'}
-            </button>
           </div>
         </div>
 
-        {/* Main Navigation */}
+        {/* Nav - PRESERVING CLICKING DESIGN */}
         <nav className="sidebar-nav">
           <div className="sidebar-menu-label">Menu</div>
-          {tabs.map(t => {
+          {TABS.map(t => {
             const active = activeTab === t.key;
-            const content = (
-              <>
-                <span style={{ fontSize: 18, filter: active ? 'none' : 'grayscale(100%) opacity(0.6)' }}>{t.icon}</span>
-                <span style={{ fontWeight: active ? 700 : 500 }}>{t.label}</span>
-              </>
-            );
-
+            const href = t.key === 'profile'
+              ? (mounted && address ? `/profile/${address}` : undefined)
+              : (t.key === 'home' ? '/' : `/?tab=${t.key}`);
+            
             const tabClassName = `sidebar-tab ${active ? 'sidebar-tab-active' : ''}`;
-            const tabStyle = active ? { 
+            const tabStyle = active ? {
               borderLeft: '4px solid var(--accent)',
               background: 'linear-gradient(90deg, var(--accent-glow), transparent)',
               paddingLeft: 12
             } : {};
 
-            if (t.href) {
+            const content = (
+              <>
+                <span className="tab-icon" style={{ fontSize: 17, filter: active ? 'none' : 'grayscale(80%) opacity(0.5)', transition: 'filter 0.2s' }}>
+                  {t.icon}
+                </span>
+                <span style={{ fontWeight: active ? 700 : 500 }}>{t.label}</span>
+              </>
+            );
+
+            if (href) {
               return (
                 <Link
                   key={t.key}
-                  href={t.href}
-                  onClick={onClose}
+                  href={href}
+                  onClick={() => { setActiveTab(t.key); onClose(); }}
                   className={tabClassName}
                   style={{ textDecoration: 'none', ...tabStyle }}
                 >
@@ -124,53 +115,107 @@ export default function Sidebar({
             }
 
             return (
-              <button key={t.key} onClick={() => { setActiveTab(t.key); onClose(); }} className={tabClassName} style={tabStyle}>
+              <button
+                key={t.key}
+                onClick={() => { setActiveTab(t.key); onClose(); }}
+                className={tabClassName}
+                style={tabStyle}
+              >
                 {content}
               </button>
             );
           })}
         </nav>
 
-      {/* Network Stats Widget */}
-      <div className="glass-panel sidebar-stats" style={{ padding: 20, border: '1px solid var(--border)' }}>
-        <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 16, color: 'var(--text)', display: 'flex', alignItems: 'center', gap: 8 }}>
-          <span style={{ color: 'var(--accent2)' }}>⚡</span> Network Stats
-        </div>
-        {[
-          { l: 'Chain', v: '0G Mainnet', c: 'var(--success)' },
-          { l: 'Total Posts', v: total.toString(), c: 'var(--accent)' },
-          { l: 'Storage', v: '0G Turbo', c: 'var(--text-muted)' },
-        ].map(i => (
-          <div key={i.l} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10 }}>
-            <span style={{ fontSize: 13, color: 'var(--text-faint)' }}>{i.l}</span>
-            <span style={valStyle(i.c)}>{i.v}</span>
-          </div>
-        ))}
-      </div>
-
-      {/* Mobile Wallet Section */}
-      <div className="mobile-only" style={{ marginTop: 'auto', flexDirection: 'column', gap: 12, paddingTop: 20, borderTop: '1px solid var(--border)' }}>
+        {/* Wrong network alert */}
         {isWrongNetwork && (
-          <button onClick={onSwitchChain} className="primary-btn" style={{ width: '100%', background: 'var(--error)', fontSize: 13 }}>
-            ⚠️ Switch to 0G Chain
-          </button>
+          <button onClick={onSwitchChain} style={{
+            display: 'flex', alignItems: 'center', gap: 8, width: '100%',
+            padding: '10px 14px', borderRadius: 10,
+            background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)',
+            color: 'var(--error)', fontSize: 13, fontWeight: 600,
+            cursor: 'pointer', fontFamily: 'inherit', marginBottom: 12
+          }}>⚠️ Switch to 0G Mainnet</button>
         )}
-        
-        {mounted && isConnected ? (
-          <>
-            <div className="glass-panel" style={{ padding: '10px', textAlign: 'center', fontSize: 12, fontWeight: 600, boxShadow: 'none' }}>
-              {address?.slice(0, 10)}...{address?.slice(-8)}
+
+        {/* Stats widget - NEW VERSION */}
+        <div style={{ marginTop: 'auto' }}>
+          <div style={{
+            background: 'var(--bg-secondary)', border: '1px solid var(--border)',
+            borderRadius: 'var(--radius-md)', padding: '16px 16px 12px',
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+              <span style={{ fontSize: 11, fontWeight: 800, color: 'var(--text-faint)', textTransform: 'uppercase', letterSpacing: '1px' }}>
+                0G Network
+              </span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                <span style={{
+                  width: 6, height: 6, borderRadius: '50%', display: 'block',
+                  background: isWrongNetwork ? 'var(--error)' : 'var(--success)',
+                }} className={isWrongNetwork ? '' : 'pulse-dot'} />
+                <span style={{ fontSize: 10, fontWeight: 700, color: isWrongNetwork ? 'var(--error)' : 'var(--success)' }}>
+                  {isWrongNetwork ? 'Wrong' : 'Live'}
+                </span>
+              </div>
             </div>
-            <button onClick={onDisconnect} className="secondary-btn" style={{ width: '100%', fontSize: 13 }}>
-              Disconnect Wallet
-            </button>
-          </>
-        ) : (
-          <button onClick={onConnect} className="primary-btn" style={{ width: '100%', fontSize: 14 }}>
-            Connect Wallet
-          </button>
-        )}
-      </div>
+
+            {[
+              { l: 'Chain ID',    v: '16661',          c: 'var(--accent)',  mono: true },
+              { l: 'Total Posts', v: total.toString(), c: 'var(--text)',    mono: false },
+              { l: 'Storage',     v: '0G Turbo',       c: 'var(--accent2)', mono: false },
+            ].map(i => (
+              <div key={i.l} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                <span style={{ fontSize: 12, color: 'var(--text-faint)' }}>{i.l}</span>
+                <span style={{ fontSize: 12, fontWeight: 700, color: i.c, fontFamily: i.mono ? 'monospace' : 'inherit' }}>{i.v}</span>
+              </div>
+            ))}
+
+            <div style={{ borderTop: '1px solid var(--border)', marginTop: 10, paddingTop: 10, display: 'flex', flexDirection: 'column', gap: 5 }}>
+              {[
+                { label: 'ChainScan ↗', url: `https://chainscan.0g.ai/address/${SOCIALVAULT_ADDRESS}` },
+                { label: 'StorageScan ↗', url: 'https://storagescan.0g.ai' },
+              ].map(link => (
+                <a key={link.label} href={link.url} target="_blank" rel="noreferrer" style={{
+                  fontSize: 11, color: 'var(--accent)', fontWeight: 700,
+                  padding: '5px 10px', borderRadius: 6,
+                  background: 'rgba(109,67,242,0.07)',
+                  textDecoration: 'none', display: 'block', transition: 'background 0.2s',
+                }}
+                onMouseEnter={e => e.currentTarget.style.background = 'rgba(109,67,242,0.14)'}
+                onMouseLeave={e => e.currentTarget.style.background = 'rgba(109,67,242,0.07)'}
+                >{link.label}</a>
+              ))}
+            </div>
+          </div>
+
+          {/* Wallet section - NEW VERSION */}
+          <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {mounted && isConnected ? (
+              <>
+                <div style={{
+                  padding: '9px 14px', borderRadius: 10,
+                  background: 'var(--bg-secondary)', border: '1px solid var(--border)',
+                  fontSize: 12, fontWeight: 600, color: 'var(--text)',
+                  fontFamily: 'monospace', textAlign: 'center',
+                }}>{address ? short(address) : ''}</div>
+                <button onClick={onDisconnect} style={{
+                  padding: '9px 14px', borderRadius: 10,
+                  background: 'transparent', border: '1px solid var(--border)',
+                  color: 'var(--text-muted)', fontSize: 13, fontWeight: 600,
+                  cursor: 'pointer', fontFamily: 'inherit',
+                }}>Disconnect</button>
+              </>
+            ) : (
+              <button onClick={onConnect} style={{
+                padding: '10px 14px', borderRadius: 10,
+                background: 'linear-gradient(135deg, var(--accent), var(--accent2))',
+                border: 'none', color: '#fff', fontSize: 14, fontWeight: 700,
+                cursor: 'pointer', fontFamily: 'inherit',
+                boxShadow: '0 4px 16px rgba(109,67,242,0.3)',
+              }}>Connect Wallet</button>
+            )}
+          </div>
+        </div>
 
       </aside>
     </>
