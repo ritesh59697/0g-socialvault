@@ -30,7 +30,7 @@ const ZERO_G_LOGO = "https://pbs.twimg.com/profile_images/2038084529374867456/Oq
 
 export default function PostCard({
   post, isConnected, isWrongNetwork, liked, tipAmount, isTipping,
-  onLike, onTip, onTipAmountChange, onDelete, isOwner,
+  onLike, onTip, onTipAmountChange, isOwner,
 }: {
   post: any; isConnected: boolean; isWrongNetwork: boolean;
   liked: boolean; tipAmount: string; isTipping: boolean;
