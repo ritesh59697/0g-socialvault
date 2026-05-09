@@ -21,7 +21,7 @@
 
 *Own your content. Monetize your influence. Exist permanently on-chain.*
 
-[**Live Demo**](https://socialvault.vercel.app) · [**Contract on ChainScan**](https://chainscan.0g.ai/address/0x368ab585E1BF87A734a44044E3F48Dd3a7Ed24eB) · [**Files on StorageScan**](https://storagescan.0g.ai) · [**Video Demo**](#)
+[**Live Demo**](https://0g-socialvault.vercel.app/) · [**Contract on ChainScan**](https://chainscan.0g.ai/address/0x368ab585E1BF87A734a44044E3F48Dd3a7Ed24eB) · [**Files on StorageScan**](https://storagescan.0g.ai) · [**Video Demo**](#)
 
 </div>
 
@@ -226,7 +226,7 @@ Every claim in this submission is verifiable on-chain:
 | Smart Contract | [chainscan.0g.ai/address/0x368ab5...](https://chainscan.0g.ai/address/0x368ab585E1BF87A734a44044E3F48Dd3a7Ed24eB) |
 | Live Transactions | [chainscan.0g.ai — PostCreated events](https://chainscan.0g.ai/address/0x368ab585E1BF87A734a44044E3F48Dd3a7Ed24eB#events) |
 | Storage Files | [storagescan.0g.ai](https://storagescan.0g.ai) |
-| Live App | [socialvault.vercel.app](#) |
+| Live App | [socialvault.vercel.app](https://0g-socialvault.vercel.app/) |
 
 ---
 
