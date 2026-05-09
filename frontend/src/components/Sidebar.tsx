@@ -38,6 +38,12 @@ export default function Sidebar({
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
 
+  const [optimisticTab, setOptimisticTab] = useState<Tab>(activeTab);
+
+  useEffect(() => {
+    setOptimisticTab(activeTab);
+  }, [activeTab]);
+
   const short = (a: string) => `${a.slice(0, 6)}···${a.slice(-4)}`;
 
   return (
@@ -54,7 +60,7 @@ export default function Sidebar({
         
         {/* Brand */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 32 }}>
-          <Link href="/" onClick={() => { setActiveTab('home'); onClose(); }} className="sidebar-brand" style={{ textDecoration: 'none', color: 'inherit' }}>
+          <Link href="/" onClick={() => { setOptimisticTab('home'); setActiveTab('home'); onClose(); }} className="sidebar-brand" style={{ textDecoration: 'none', color: 'inherit' }}>
             <svg width="130" height="28" viewBox="0 0 160 34" fill="none" xmlns="http://www.w3.org/2000/svg">
               <defs>
                 <linearGradient id="logoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -93,7 +99,7 @@ export default function Sidebar({
         <nav className="sidebar-nav">
           <div className="sidebar-menu-label">Menu</div>
           {TABS.map(t => {
-            const active = mounted && activeTab === t.key;
+            const active = mounted && optimisticTab === t.key;
             const Icon = t.icon;
             const href = t.key === 'profile'
               ? (mounted && address ? `/profile/${address}` : undefined)
@@ -121,7 +127,15 @@ export default function Sidebar({
                 <Link
                   key={t.key}
                   href={href}
-                  onClick={() => { onClose(); }}
+                  onClick={() => { 
+                    setOptimisticTab(t.key);
+                    // Only update parent state for non-profile tabs to avoid double-render flicker
+                    // Profile is a separate route that handles its own state
+                    if (t.key !== 'profile') {
+                      setActiveTab(t.key);
+                    }
+                    onClose(); 
+                  }}
                   className={tabClassName}
                   style={{ textDecoration: 'none', ...tabStyle }}
                 >
@@ -133,7 +147,11 @@ export default function Sidebar({
             return (
               <button
                 key={t.key}
-                onClick={() => { setActiveTab(t.key); onClose(); }}
+                onClick={() => { 
+                  setOptimisticTab(t.key);
+                  setActiveTab(t.key); 
+                  onClose(); 
+                }}
                 className={tabClassName}
                 style={tabStyle}
               >
