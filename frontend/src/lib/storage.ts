@@ -156,6 +156,7 @@ export interface PostMetadata {
   fileSize: number;
   rootHash: string;
   txHash: string;
+  caption?: string;
   timestamp?: number;
 }
 
