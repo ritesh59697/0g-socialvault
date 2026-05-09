@@ -93,7 +93,7 @@ export default function Sidebar({
         <nav className="sidebar-nav">
           <div className="sidebar-menu-label">Menu</div>
           {TABS.map(t => {
-            const active = activeTab === t.key;
+            const active = mounted && activeTab === t.key;
             const Icon = t.icon;
             const href = t.key === 'profile'
               ? (mounted && address ? `/profile/${address}` : undefined)
