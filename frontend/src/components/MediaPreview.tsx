@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, useRef } from 'react';
 import { downloadFromZeroG, downloadPostMetadata, type PostMetadata } from '@/lib/storage';
 import { Loader2, AlertCircle, FileDigit } from 'lucide-react';
 
@@ -27,16 +27,36 @@ export default function MediaPreview({
   const [mediaUrl, setMediaUrl] = useState('');
   const [status, setStatus] = useState<'loading' | 'ready' | 'error'>('loading');
   const [error, setError] = useState('');
+  const [isInView, setIsInView] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   const isRenderable = mediaType === IMAGE || mediaType === VIDEO;
   const shortHash = useMemo(() => `${mediaRootHash.slice(0, 18)}...${mediaRootHash.slice(-8)}`, [mediaRootHash]);
+
+  // Lazy loading implementation
+  useEffect(() => {
+    if (!containerRef.current || !isRenderable) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsInView(true);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: '300px' } // Start loading 300px before entering viewport
+    );
+
+    observer.observe(containerRef.current);
+    return () => observer.disconnect();
+  }, [isRenderable]);
 
   useEffect(() => {
     let cancelled = false;
     let objectUrl = '';
 
     async function loadMedia() {
-      if (!isRenderable) return;
+      if (!isRenderable || !isInView) return;
 
       setStatus('loading');
       setError('');
@@ -72,19 +92,25 @@ export default function MediaPreview({
       cancelled = true;
       if (objectUrl) URL.revokeObjectURL(objectUrl);
     };
-  }, [isRenderable, mediaRootHash, mediaType, metadataRootHash]);
+  }, [isRenderable, isInView, mediaRootHash, mediaType, metadataRootHash]);
 
   if (!isRenderable) return null;
 
   return (
-    <div style={{ marginTop: compact ? 12 : 16 }}>
+    <div ref={containerRef} style={{ marginTop: compact ? 12 : 16, minHeight: 100 }}>
       {metadata?.caption && (
         <p style={{ fontSize: compact ? 14 : 15, lineHeight: 1.6, color: 'var(--text)', marginBottom: 12 }}>
           {metadata.caption}
         </p>
       )}
 
-      {status === 'loading' && (
+      {!isInView && (
+        <div className="glass-panel" style={{ padding: compact ? 24 : 48, textAlign: 'center', background: 'var(--bg-secondary)', border: '1px solid var(--border)', opacity: 0.5 }}>
+          <div style={{ color: 'var(--text-faint)', fontSize: 12 }}>Scrolling to load...</div>
+        </div>
+      )}
+
+      {isInView && status === 'loading' && (
         <div className="glass-panel" style={{ padding: compact ? 24 : 48, textAlign: 'center', boxShadow: 'none', background: 'var(--bg-secondary)', border: '1px dashed var(--border)' }}>
           <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 20 }}>
             <Loader2 size={32} className="animate-spin" style={{ color: 'var(--accent)' }} />
@@ -94,7 +120,7 @@ export default function MediaPreview({
         </div>
       )}
 
-      {status === 'error' && (
+      {isInView && status === 'error' && (
         <div style={{ padding: '16px', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 'var(--radius-md)', background: 'rgba(239,68,68,0.08)', display: 'flex', gap: 12 }}>
           <AlertCircle size={20} style={{ color: 'var(--error)', flexShrink: 0 }} />
           <div>
@@ -107,7 +133,7 @@ export default function MediaPreview({
         </div>
       )}
 
-      {status === 'ready' && mediaType === IMAGE && (
+      {isInView && status === 'ready' && mediaType === IMAGE && (
         <img src={mediaUrl} alt={metadata?.caption || metadata?.fileName || '0G stored media'} style={{
           maxWidth: '100%',
           width: 'auto',
@@ -120,8 +146,8 @@ export default function MediaPreview({
         }} />
       )}
 
-      {status === 'ready' && mediaType === VIDEO && (
-        <video src={mediaUrl} controls style={{
+      {isInView && status === 'ready' && mediaType === VIDEO && (
+        <video src={mediaUrl} controls preload="metadata" playsInline style={{
           maxWidth: '100%',
           width: 'auto',
           height: 'auto',

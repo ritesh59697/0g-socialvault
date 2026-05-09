@@ -98,7 +98,8 @@ export default function ProfileView({
             const age = Date.now() - (t.timestamp || 0);
             if (age < 60000) {
               changed = true;
-              return { ...t, timestamp: Date.now() - 1500000 };
+              // 7 hours = 7 * 3600 * 1000 = 25,200,000 ms
+              return { ...t, timestamp: Date.now() - 25200000 };
             }
           }
           return t;

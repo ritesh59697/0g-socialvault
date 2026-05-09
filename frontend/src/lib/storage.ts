@@ -23,26 +23,63 @@ export interface PostMetadata {
   createdAt?: string;
 }
 
+// ── IndexedDB Cache for Media Blobs ─────────────────────────────────────────
+const DB_NAME = 'SocialVault_MediaCache';
+const STORE_NAME = 'blobs';
+
+async function getDB() {
+  return new Promise<IDBDatabase>((resolve, reject) => {
+    if (typeof window === 'undefined') return reject('Not in browser');
+    const request = indexedDB.open(DB_NAME, 1);
+    request.onupgradeneeded = () => {
+      if (!request.result.objectStoreNames.contains(STORE_NAME)) {
+        request.result.createObjectStore(STORE_NAME);
+      }
+    };
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error);
+  });
+}
+
+async function getCachedMedia(hash: string): Promise<Blob | null> {
+  try {
+    const db = await getDB();
+    return new Promise((resolve) => {
+      const transaction = db.transaction(STORE_NAME, 'readonly');
+      const request = transaction.objectStore(STORE_NAME).get(hash);
+      request.onsuccess = () => resolve(request.result || null);
+      request.onerror = () => resolve(null);
+    });
+  } catch {
+    return null;
+  }
+}
+
+async function setCachedMedia(hash: string, blob: Blob) {
+  try {
+    const db = await getDB();
+    const transaction = db.transaction(STORE_NAME, 'readwrite');
+    transaction.objectStore(STORE_NAME).put(blob, hash);
+  } catch (e) {
+    console.warn('Failed to cache media:', e);
+  }
+}
+
 // ── Patch fetch & XHR so HTTP storage-node calls go through our HTTPS proxy ──────
 let _patched = false;
 function patchNetworkForProxy() {
   if (typeof window === 'undefined' || _patched) return;
   _patched = true;
 
-  // 1. Patch Fetch
   const _origFetch = window.fetch.bind(window);
   window.fetch = ((input: RequestInfo | URL, init?: RequestInit) => {
-    const url =
-      typeof input === 'string' ? input
-        : input instanceof URL ? input.toString()
-          : (input as Request).url;
+    const url = typeof input === 'string' ? input : input instanceof URL ? input.toString() : (input as Request).url;
     if (url.startsWith('http://') && /\d+\.\d+\.\d+\.\d+:\d+/.test(url)) {
       return _origFetch(`/api/storage-proxy?url=${encodeURIComponent(url)}`, init);
     }
     return _origFetch(input, init);
   }) as typeof window.fetch;
 
-  // 2. Patch XMLHttpRequest (for Axios used by 0G SDK)
   const _origOpen = XMLHttpRequest.prototype.open;
   XMLHttpRequest.prototype.open = function(this: XMLHttpRequest, method: string, url: string | URL, ...args: any[]) {
     const urlStr = typeof url === 'string' ? url : url.toString();
@@ -97,28 +134,36 @@ export async function uploadToZeroG(
   };
 }
 
-// ── Download a file from 0G Storage (returns Blob) ──────────────────
+// ── Download a file from 0G Storage (with Caching) ──────────────────
 export async function downloadFromZeroG(rootHash: string): Promise<Blob> {
   if (!rootHash || rootHash.length < 10) throw new Error('Invalid root hash');
   
+  // 1. Check cache first
+  const cached = await getCachedMedia(rootHash);
+  if (cached) return cached;
+
   patchNetworkForProxy();
   
+  // 2. Download from 0G
   // @ts-ignore
   const { Indexer } = await import('@0gfoundation/0g-storage-ts-sdk/browser');
   const indexer = new Indexer(INDEXER_RPC);
   
-  // downloadToBlob is the recommended way for browser/Next.js
-  const [blob, err] = (await indexer.downloadToBlob(rootHash)) as [Blob, any];
+  // Optimized download options: disable proof verification to save main thread CPU
+  const [blob, err] = (await indexer.downloadToBlob(rootHash, { proof: false })) as [Blob, any];
   
   if (err || !blob) {
     console.error('Download error:', err);
     throw new Error(`Failed to download from 0G: ${String(err || 'Unknown')}`);
   }
   
+  // 3. Set cache for next time
+  await setCachedMedia(rootHash, blob);
+  
   return blob;
 }
 
-// Alias kept for backward-compat (returns Object URL)
+// Alias kept for backward-compat
 export async function getFileUrl(rootHash: string): Promise<string> {
   try {
     const blob = await downloadFromZeroG(rootHash);
