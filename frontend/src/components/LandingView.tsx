@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { 
-  Zap, Diamond, ShieldCheck, Star, Wallet, PenLine, 
+import {
+  Zap, Diamond, ShieldCheck, Star, Wallet, PenLine,
   Link2, Box, FileCode, ExternalLink, User,
   Rocket, BarChart3, Globe, Layers, Cpu
 } from 'lucide-react';
@@ -197,7 +197,7 @@ export default function LandingView({
             {
               icon: <Zap size={24} />,
               title: 'Hyper-Fast 0G Storage',
-              desc: 'Decentralized media delivery that rivals traditional clouds. Your files are sharded across 0G nodes — permanent, fast, and near-zero cost.',
+              desc: 'Decentralized media delivery that rivals traditional clouds. Your files are sharded across 0G nodes - permanent, fast, and near-zero cost.',
               tag: '0G Storage',
               color: '#06b6d4',
               glow: 'rgba(6,182,212,0.12)',
@@ -232,16 +232,16 @@ export default function LandingView({
               transition: 'all 0.28s cubic-bezier(0.4,0,0.2,1)',
               position: 'relative', overflow: 'hidden',
             }}
-            onMouseEnter={e => {
-              e.currentTarget.style.transform = 'translateY(-5px)';
-              e.currentTarget.style.boxShadow = `0 20px 48px ${f.glow}, var(--shadow-md)`;
-              e.currentTarget.style.borderColor = f.border;
-            }}
-            onMouseLeave={e => {
-              e.currentTarget.style.transform = 'translateY(0)';
-              e.currentTarget.style.boxShadow = 'var(--shadow-sm)';
-              e.currentTarget.style.borderColor = 'var(--border)';
-            }}
+              onMouseEnter={e => {
+                e.currentTarget.style.transform = 'translateY(-5px)';
+                e.currentTarget.style.boxShadow = `0 20px 48px ${f.glow}, var(--shadow-md)`;
+                e.currentTarget.style.borderColor = f.border;
+              }}
+              onMouseLeave={e => {
+                e.currentTarget.style.transform = 'translateY(0)';
+                e.currentTarget.style.boxShadow = 'var(--shadow-sm)';
+                e.currentTarget.style.borderColor = 'var(--border)';
+              }}
             >
               <div style={{ position: 'absolute', top: -30, right: -30, width: 120, height: 120, borderRadius: '50%', background: f.glow, filter: 'blur(30px)', pointerEvents: 'none' }} />
 
@@ -282,8 +282,7 @@ export default function LandingView({
         <div style={{ 
           display: 'grid', 
           gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', 
-          gap: 16,
-          // Help prevent layout shifts during cycle
+          gap: 20,
           alignItems: 'start'
         }}>
           {[
@@ -297,42 +296,68 @@ export default function LandingView({
               <div key={i}
                 onClick={() => setActiveStep(i)}
                 style={{
-                  padding: '22px 20px',
+                  padding: '24px',
                   background: isActive ? `${item.color}0d` : 'var(--surface)',
-                  border: `1px solid ${isActive ? item.color + '33' : 'var(--border)'}`,
+                  border: `1px solid ${isActive ? item.color + '44' : 'var(--border)'}`,
                   borderRadius: 'var(--radius-lg)',
                   cursor: 'pointer',
-                  transition: 'all 0.4s cubic-bezier(0.4,0,0.2,1)',
-                  // Reduced transform on mobile to prevent flickering
-                  transform: isActive ? 'translateY(-2px)' : 'none',
-                  boxShadow: isActive ? `0 12px 32px ${item.color}12` : 'var(--shadow-xs)',
+                  transition: 'all 0.4s cubic-bezier(0.2, 0, 0, 1)',
+                  transform: isActive ? 'translateY(-4px)' : 'none',
+                  boxShadow: isActive ? `0 12px 32px ${item.color}18` : 'var(--shadow-xs)',
                   display: 'flex',
                   flexDirection: 'column',
-                  // Ensure hardware acceleration
-                  willChange: 'transform, background-color, border-color'
+                  position: 'relative',
+                  overflow: 'hidden'
                 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14 }}>
                   <span style={{
-                    fontSize: 11, fontWeight: 900, fontFamily: 'monospace',
+                    fontSize: 12, fontWeight: 900, fontFamily: 'monospace',
                     color: isActive ? item.color : 'var(--text-faint)',
                     letterSpacing: '0.05em',
                   }}>{item.step}</span>
-                  <span style={{ color: isActive ? item.color : 'var(--text-faint)' }}>{item.icon}</span>
+                  <div style={{ 
+                    color: isActive ? item.color : 'var(--text-faint)',
+                    transition: 'transform 0.4s ease',
+                    transform: isActive ? 'scale(1.1)' : 'scale(1)'
+                  }}>{item.icon}</div>
                 </div>
-                <div style={{ fontSize: 14, fontWeight: 700, color: isActive ? 'var(--text)' : 'var(--text-muted)', marginBottom: 6 }}>
+                
+                <div style={{ 
+                  fontSize: 15, 
+                  fontWeight: 800, 
+                  color: isActive ? 'var(--text)' : 'var(--text-muted)', 
+                  marginBottom: 8,
+                  transition: 'color 0.4s ease'
+                }}>
                   {item.title}
                 </div>
+
                 <div style={{
-                  fontSize: 12, color: 'var(--text-faint)', lineHeight: 1.6,
-                  maxHeight: isActive ? 150 : 0,
-                  overflow: 'hidden',
-                  transition: 'max-height 0.5s ease, opacity 0.4s ease',
+                  display: 'grid',
+                  gridTemplateRows: isActive ? '1fr' : '0fr',
+                  transition: 'grid-template-rows 0.4s cubic-bezier(0.2, 0, 0, 1), opacity 0.3s ease',
                   opacity: isActive ? 1 : 0,
-                  // Help mobile browsers optimize the transition
-                  willChange: 'max-height, opacity'
                 }}>
-                  {item.desc}
+                  <div style={{ overflow: 'hidden', minHeight: 0 }}>
+                    <p style={{ 
+                      fontSize: 13, 
+                      color: 'var(--text-faint)', 
+                      lineHeight: 1.6, 
+                      margin: '4px 0 0 0',
+                      fontWeight: 500
+                    }}>
+                      {item.desc}
+                    </p>
+                  </div>
                 </div>
+
+                {isActive && (
+                  <div style={{
+                    position: 'absolute', bottom: 0, left: 0, right: 0, height: 3,
+                    background: item.color,
+                    animation: 'shimmer 2.8s linear infinite'
+                  }} />
+                )}
               </div>
             );
           })}

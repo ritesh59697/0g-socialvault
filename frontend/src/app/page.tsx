@@ -246,7 +246,7 @@ function HomeContent() {
                 transition: 'all 0.2s'
               }}
             >
-              {(isFetching || refreshingFeed) ? <Loader2 size={16} className="spin" /> : <RefreshCw size={16} />}
+              {(isFetching || refreshingFeed) ? <Loader2 size={16} className="animate-spin" /> : <RefreshCw size={16} />}
               {(isFetching || refreshingFeed) ? 'Syncing...' : 'Refresh Feed'}
             </button>
           </div>
@@ -255,7 +255,7 @@ function HomeContent() {
             isFetching || refreshingFeed ? (
               <div className="glass-panel" style={{ padding: '80px 24px', textAlign: 'center' }}>
                 <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 20 }}>
-                  <Loader2 size={32} className="spin" style={{ color: 'var(--accent)' }} />
+                  <Loader2 size={32} className="animate-spin" style={{ color: 'var(--accent)' }} />
                 </div>
                 <p style={{ color: 'var(--text-muted)', fontSize: 15, fontWeight: 500 }}>Syncing with 0G Mainnet...</p>
               </div>
@@ -278,7 +278,7 @@ function HomeContent() {
                   background: 'var(--bg-secondary)',
                   boxShadow: 'none',
                 }}>
-                  <Loader2 size={18} className="spin" style={{ color: 'var(--accent)' }} />
+                  <Loader2 size={18} className="animate-spin" style={{ color: 'var(--accent)' }} />
                   <div>
                     <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--text)' }}>Syncing Feed</div>
                     <div style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 500 }}>Fetching new data from 0G Mainnet nodes...</div>
@@ -338,7 +338,7 @@ export default function Home() {
     <Suspense fallback={
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', background: '#09090b', color: 'white' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <Loader2 size={24} className="spin" style={{ color: 'var(--accent)' }} />
+          <Loader2 className="animate-spin" size={24} style={{ color: 'var(--accent)' }} />
           <div style={{ fontSize: 14, fontWeight: 800, letterSpacing: 1, textTransform: 'uppercase' }}>SocialVault</div>
         </div>
       </div>

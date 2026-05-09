@@ -87,7 +87,7 @@ export default function MediaPreview({
       {status === 'loading' && (
         <div className="glass-panel" style={{ padding: compact ? 24 : 48, textAlign: 'center', boxShadow: 'none', background: 'var(--bg-secondary)', border: '1px dashed var(--border)' }}>
           <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 20 }}>
-            <Loader2 size={32} className="spin" style={{ color: 'var(--accent)' }} />
+            <Loader2 size={32} className="animate-spin" style={{ color: 'var(--accent)' }} />
           </div>
           <div style={{ color: 'var(--text)', fontWeight: 700, fontSize: 15, marginBottom: 4 }}>Buffering from 0G Storage...</div>
           <div style={{ color: 'var(--text-muted)', fontSize: 12 }}>Retrieving decentralized blocks</div>

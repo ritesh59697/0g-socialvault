@@ -33,7 +33,7 @@ export default function CreatePost({
   const StatusIcon = () => {
     if (statusType === 'success') return <CheckCircle2 size={16} />;
     if (statusType === 'error') return <AlertCircle size={16} />;
-    return <Loader2 size={16} className="spin" />;
+    return <Loader2 size={16} className="animate-spin" />;
   };
 
   return (
@@ -156,7 +156,7 @@ export default function CreatePost({
               opacity: (!caption && !file) || uploading ? 0.5 : 1,
               cursor: (!caption && !file) || uploading ? 'not-allowed' : 'pointer'
             }}>
-              {uploading ? <Loader2 size={16} className="spin" /> : <CloudUpload size={16} />}
+              {uploading ? <Loader2 size={16} className="animate-spin" /> : <CloudUpload size={16} />}
               {uploading ? 'Analyzing...' : 'Post to 0G'}
             </button>
           </div>
