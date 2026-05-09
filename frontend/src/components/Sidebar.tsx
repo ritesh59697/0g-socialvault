@@ -106,11 +106,6 @@ export default function Sidebar({
               : (t.key === 'home' ? '/' : `/?tab=${t.key}`);
             
             const tabClassName = `sidebar-tab ${active ? 'sidebar-tab-active' : ''}`;
-            const tabStyle = active ? {
-              borderLeft: '4px solid var(--accent)',
-              background: 'linear-gradient(90deg, var(--accent-glow), transparent)',
-              paddingLeft: 12
-            } : {};
 
             const content = (
               <>
@@ -137,7 +132,7 @@ export default function Sidebar({
                     onClose(); 
                   }}
                   className={tabClassName}
-                  style={{ textDecoration: 'none', ...tabStyle }}
+                  style={{ textDecoration: 'none' }}
                 >
                   {content}
                 </Link>
@@ -153,7 +148,6 @@ export default function Sidebar({
                   onClose(); 
                 }}
                 className={tabClassName}
-                style={tabStyle}
               >
                 {content}
               </button>
