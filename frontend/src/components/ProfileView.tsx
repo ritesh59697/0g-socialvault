@@ -24,7 +24,7 @@ const ZERO_G_LOGO = "https://pbs.twimg.com/profile_images/2038084529374867456/Oq
 
 export default function ProfileView({
   address, isConnected, posts, onConnect, isOwnProfile = true, connectedAddress,
-  onLike, onTip, onDelete, isTipping, tipAmounts, setTipAmounts, likedPosts, isWrongNetwork
+  onLike, onTip, isTipping, tipAmounts, setTipAmounts, likedPosts, isWrongNetwork
 }: {
   address?: string;
   isConnected: boolean;
@@ -34,7 +34,6 @@ export default function ProfileView({
   connectedAddress?: string;
   onLike?: (id: bigint) => void;
   onTip?: (id: bigint) => void;
-  onDelete?: (id: bigint) => void;
   isTipping?: boolean;
   tipAmounts?: Record<string, string>;
   setTipAmounts?: (a: Record<string, string>) => void;
@@ -42,23 +41,6 @@ export default function ProfileView({
   isWrongNetwork?: boolean;
 }) {
   const [activeSubTab, setActiveSubTab] = useState<'posts' | 'earnings' | 'info'>('posts');
-  const [deletedPosts, setDeletedPosts] = useState<Set<string>>(new Set());
-
-  useEffect(() => {
-    const saved = localStorage.getItem('sv_deleted_posts');
-    if (saved) setDeletedPosts(new Set(JSON.parse(saved)));
-  }, []);
-
-  const saveDeleted = (newSet: Set<string>) => {
-    setDeletedPosts(newSet);
-    localStorage.setItem('sv_deleted_posts', JSON.stringify(Array.from(newSet)));
-  };
-
-  const handleInternalDelete = (postId: bigint) => {
-    if (!confirm('Are you sure you want to delete this post?')) return;
-    saveDeleted(new Set([...deletedPosts, postId.toString()]));
-    if (onDelete) onDelete(postId);
-  };
 
   const [bio, setBio] = useState('');
   const [username, setUsername] = useState('');
@@ -101,10 +83,9 @@ export default function ProfileView({
   const profilePosts = useMemo(() => {
     if (!address) return [];
     return posts.filter((p: any) => 
-      p.author.toLowerCase() === address.toLowerCase() && 
-      !deletedPosts.has(p.id.toString())
+      p.author.toLowerCase() === address.toLowerCase()
     );
-  }, [posts, address, deletedPosts]);
+  }, [posts, address]);
 
   const totalEarnings = useMemo(() => {
     return profilePosts.reduce((acc, post) => acc + BigInt(post.tipTotal || 0), BigInt(0));
@@ -354,7 +335,6 @@ export default function ProfileView({
                   isTipping={!!isTipping}
                   onLike={() => onLike?.(post.id)}
                   onTip={() => onTip?.(post.id)}
-                  onDelete={() => handleInternalDelete(post.id)}
                   isOwner={connectedAddress?.toLowerCase() === post.author.toLowerCase()}
                   onTipAmountChange={(v) => {
                     if (setTipAmounts && tipAmounts) {
