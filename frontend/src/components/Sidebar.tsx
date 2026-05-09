@@ -121,7 +121,7 @@ export default function Sidebar({
                 <Link
                   key={t.key}
                   href={href}
-                  onClick={() => { setActiveTab(t.key); onClose(); }}
+                  onClick={() => { onClose(); }}
                   className={tabClassName}
                   style={{ textDecoration: 'none', ...tabStyle }}
                 >
