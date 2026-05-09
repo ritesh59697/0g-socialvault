@@ -77,11 +77,7 @@ export async function uploadToZeroG(
   const provider = new ethers.BrowserProvider(eip1193);
   const signer = await provider.getSigner();
 
-  onProgress?.('Preparing file...');
-  const arrayBuffer = await file.arrayBuffer();
-  const uint8Array = new Uint8Array(arrayBuffer);
-  // The SDK version in package.json supports passing File directly or the array approach
-  const zgBlob = new ZgBlob([uint8Array], { type: file.type });
+  const zgBlob = new ZgBlob(file);
 
   onProgress?.(`Uploading ${file.name} to 0G Storage...`);
   const indexer = new Indexer(INDEXER_RPC);
