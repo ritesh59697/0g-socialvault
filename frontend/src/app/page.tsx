@@ -307,6 +307,7 @@ export default function Home() {
             address={address} 
             posts={orderedPosts}
             isConnected={isConnected}
+            onConnect={doConnect}
             connectedAddress={address}
             onLike={handleLike}
             onTip={handleTip}
