@@ -12,9 +12,7 @@ import {
   Video as VideoIcon, 
   ShieldCheck, 
   Globe,
-  FileText,
-  Database,
-  ExternalLink
+  FileText
 } from 'lucide-react';
 
 const short = (a: string) => `${a.slice(0, 6)}...${a.slice(-4)}`;
@@ -105,21 +103,11 @@ export default function PostCard({
               <VideoIcon size={12} /> Video
             </span>
           )}
-          <a href={`https://storagescan.0g.ai/submission/${post.storageRootHash}`} target="_blank" rel="noopener noreferrer" title="Verify storage on 0G StorageScan" style={{
-            display: 'flex', alignItems: 'center', gap: 6, padding: '4px 12px',
-            borderRadius: 20, background: 'rgba(6,182,212,0.08)',
-            border: '1px solid rgba(6,182,212,0.2)', color: 'var(--accent2)',
-            fontSize: 12, fontWeight: 700, boxShadow: 'none',
-            textDecoration: 'none'
-          }}>
-            <Database size={12} /> 0G Storage
-          </a>
           <a href={`https://chainscan.0g.ai/address/${SOCIALVAULT_ADDRESS}`} target="_blank" rel="noopener noreferrer" title="Open the SocialVault contract on 0G ChainScan" style={{
             display: 'flex', alignItems: 'center', gap: 6, padding: '4px 12px',
             borderRadius: 20, background: 'rgba(16,185,129,0.08)',
             border: '1px solid rgba(16,185,129,0.2)', color: 'var(--success)',
             fontSize: 12, fontWeight: 700, boxShadow: 'none',
-            textDecoration: 'none'
           }}>
             <ShieldCheck size={12} /> Contract
           </a>
@@ -143,17 +131,9 @@ export default function PostCard({
               metadataRootHash={post.metadataRootHash}
               mediaType={mediaType}
             />
-            <a href={`https://storagescan.0g.ai/submission/${post.storageRootHash}`} target="_blank" rel="noopener noreferrer" style={{ 
-              marginTop: 10, display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, 
-              color: 'var(--accent2)', fontFamily: 'monospace', textDecoration: 'none',
-              fontWeight: 600, transition: 'opacity 0.2s'
-            }}
-            onMouseEnter={e => e.currentTarget.style.opacity = '0.8'}
-            onMouseLeave={e => e.currentTarget.style.opacity = '1'}
-            >
+            <div style={{ marginTop: 10, display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, color: 'var(--text-faint)', fontFamily: 'monospace' }}>
               <Globe size={11} /> 0G Root: {post.storageRootHash.slice(0, 18)}...{post.storageRootHash.slice(-8)}
-              <ExternalLink size={10} style={{ opacity: 0.7 }} />
-            </a>
+            </div>
           </>
         )}
       </div>
