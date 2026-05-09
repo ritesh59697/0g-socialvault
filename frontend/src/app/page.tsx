@@ -79,26 +79,8 @@ function HomeContent() {
     },
   });
 
-  const [deletedPosts, setDeletedPosts] = useState<Set<string>>(new Set());
-
-  useEffect(() => {
-    const saved = localStorage.getItem('sv_deleted_posts');
-    if (saved) setDeletedPosts(new Set(JSON.parse(saved)));
-  }, []);
-
-  const saveDeleted = (newSet: Set<string>) => {
-    setDeletedPosts(newSet);
-    localStorage.setItem('sv_deleted_posts', JSON.stringify(Array.from(newSet)));
-  };
-
-  async function handleDelete(postId: bigint) {
-    if (!confirm('Are you sure you want to delete this post? This will remove it from your feed.')) return;
-    saveDeleted(new Set([...deletedPosts, postId.toString()]));
-  }
-
   const posts = feedData?.[0] || [];
   const orderedPosts = [...posts]
-    .filter((p: any) => !deletedPosts.has(p.id.toString()))
     .sort((a: any, b: any) => {
       if (a.id === b.id) return 0;
       return a.id > b.id ? -1 : 1;
@@ -310,7 +292,6 @@ function HomeContent() {
                   tipAmount={tipAmounts[post.id.toString()] || '0.01'}
                   isTipping={tippingPostId === post.id.toString()}
                   onLike={() => handleLike(post.id)} onTip={() => handleTip(post.id)}
-                  onDelete={() => handleDelete(post.id)}
                   isOwner={address?.toLowerCase() === post.author.toLowerCase()}
                   onTipAmountChange={v => setTipAmounts(p => ({ ...p, [post.id.toString()]: v }))} />
               ))}

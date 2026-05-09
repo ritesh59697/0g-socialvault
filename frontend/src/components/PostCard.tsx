@@ -36,7 +36,6 @@ export default function PostCard({
   liked: boolean; tipAmount: string; isTipping: boolean;
   onLike: () => void; onTip: () => void;
   onTipAmountChange: (v: string) => void;
-  onDelete?: () => void;
   isOwner?: boolean;
 }) {
   const [authorName, setAuthorName] = useState<string | null>(null);
@@ -180,22 +179,6 @@ export default function PostCard({
           {post.likeCount.toString()}
         </button>
 
-        {isOwner && onDelete && (
-          <button 
-            onClick={onDelete}
-            className="secondary-btn"
-            title="Delete Post"
-            style={{
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              width: 38, height: 38, borderRadius: '50%',
-              background: 'rgba(239,68,68,0.05)',
-              border: '1px solid rgba(239,68,68,0.15)',
-              color: '#ef4444', cursor: 'pointer',
-            }}
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'block', position: 'relative', zIndex: 5 }}><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-          </button>
-        )}
 
         <div className="tip-panel" style={{
           display: 'flex',
