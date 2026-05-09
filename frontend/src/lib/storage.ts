@@ -29,7 +29,7 @@ function patchFetchForProxy() {
   if (typeof window === 'undefined' || _fetchPatched) return;
   _fetchPatched = true;
   const _orig = window.fetch.bind(window);
-  window.fetch = (input: RequestInfo | URL, init?: RequestInit) => {
+  window.fetch = ((input: RequestInfo | URL, init?: RequestInit) => {
     const url =
       typeof input === 'string' ? input
         : input instanceof URL ? input.toString()
@@ -38,7 +38,7 @@ function patchFetchForProxy() {
       return _orig(`/api/storage-proxy?url=${encodeURIComponent(url)}`, init);
     }
     return _orig(input, init);
-  };
+  }) as typeof window.fetch;
 }
 
 // ── Upload a file to 0G Storage ────────────────────────────────────────────
@@ -51,6 +51,7 @@ export async function uploadToZeroG(
 
   onProgress?.('Loading 0G SDK...');
   const [{ Blob: ZgBlob, Indexer }, { ethers }] = await Promise.all([
+    // @ts-ignore
     import('@0gfoundation/0g-storage-ts-sdk/browser'),
     import('ethers'),
   ]);
@@ -62,15 +63,16 @@ export async function uploadToZeroG(
   onProgress?.('Preparing file...');
   const zgBlob = new ZgBlob(file);
 
-
   onProgress?.(`Uploading ${file.name} to 0G Storage...`);
   const indexer = new Indexer(INDEXER_RPC);
-  const [tx, err] = await indexer.upload(zgBlob, EVM_RPC, signer as any);
+  const [tx, err] = (await indexer.upload(zgBlob, EVM_RPC, signer as any)) as [any, any];
 
-  if (err || !tx) throw new Error(`0G upload failed: ${String(err)}`);
+  if (err || !tx) throw new Error(`0G upload failed: ${String(err || 'Unknown error')}`);
 
-  const rootHash = ('rootHash' in tx ? tx.rootHash : (tx as { rootHashes: string[] }).rootHashes[0]) as string;
-  const txHash = ('txHash' in tx ? tx.txHash : (tx as { txHashes: string[] }).txHashes[0]) as string;
+  const rootHash = ('rootHash' in tx ? tx.rootHash : (tx as any).rootHashes?.[0]) as string;
+  const txHash = ('txHash' in tx ? tx.txHash : (tx as any).txHashes?.[0]) as string;
+
+  if (!rootHash) throw new Error('Upload succeeded but no root hash was returned.');
 
   return {
     rootHash,
@@ -82,42 +84,36 @@ export async function uploadToZeroG(
   };
 }
 
-// ── Download a file from 0G Storage (returns object URL) ──────────────────
-export async function downloadFromZeroG(rootHash: string): Promise<string> {
-  if (!rootHash || rootHash.length < 10) return '';
+// ── Download a file from 0G Storage (returns Blob) ──────────────────
+export async function downloadFromZeroG(rootHash: string): Promise<Blob> {
+  if (!rootHash || rootHash.length < 10) throw new Error('Invalid root hash');
+  
+  patchFetchForProxy();
+  
+  // @ts-ignore
+  const { Indexer } = await import('@0gfoundation/0g-storage-ts-sdk/browser');
+  const indexer = new Indexer(INDEXER_RPC);
+  
+  // downloadToBlob is the recommended way for browser/Next.js
+  const [blob, err] = (await indexer.downloadToBlob(rootHash)) as [Blob, any];
+  
+  if (err || !blob) {
+    console.error('Download error:', err);
+    throw new Error(`Failed to download from 0G: ${String(err || 'Unknown')}`);
+  }
+  
+  return blob;
+}
+
+// Alias kept for backward-compat (returns Object URL)
+export async function getFileUrl(rootHash: string): Promise<string> {
   try {
-    patchFetchForProxy();
-    const { Indexer, StorageNode } = await import('@0gfoundation/0g-storage-ts-sdk/browser');
-
-    const indexer = new Indexer(INDEXER_RPC);
-    const [nodes, nErr] = await indexer.selectNodes(rootHash, 1);
-    if (nErr || !nodes?.length) return '';
-
-    const node = new StorageNode((nodes[0] as { url: string }).url);
-    const [fileInfo, fErr] = await node.getFileInfo(rootHash);
-    if (fErr || !fileInfo) return '';
-
-    const fi = fileInfo as { numChunks: number; txSeq: number };
-    const segs: Uint8Array[] = [];
-    for (let i = 0; i < fi.numChunks; i++) {
-      const [seg, sErr] = await node.downloadSegmentByTxSeq(fi.txSeq, i, true);
-      if (sErr || !seg) break;
-      segs.push(new Uint8Array(seg as any));
-    }
-    if (!segs.length) return '';
-
-    const total = segs.reduce((s, b) => s + b.byteLength, 0);
-    const merged = new Uint8Array(total);
-    let offset = 0;
-    for (const s of segs) { merged.set(s, offset); offset += s.byteLength; }
-    return URL.createObjectURL(new Blob([merged]));
+    const blob = await downloadFromZeroG(rootHash);
+    return URL.createObjectURL(blob);
   } catch {
     return '';
   }
 }
-
-// Alias kept for backward-compat
-export const getFileUrl = downloadFromZeroG;
 
 // ── Download + parse metadata JSON from 0G Storage ────────────────────────
 export async function downloadPostMetadata(
@@ -125,11 +121,11 @@ export async function downloadPostMetadata(
 ): Promise<PostMetadata | null> {
   if (!metadataRootHash || metadataRootHash.length < 10) return null;
   try {
-    const url = await downloadFromZeroG(metadataRootHash);
-    if (!url) return null;
-    const res = await fetch(url);
-    return (await res.json()) as PostMetadata;
-  } catch {
+    const blob = await downloadFromZeroG(metadataRootHash);
+    const text = await blob.text();
+    return JSON.parse(text) as PostMetadata;
+  } catch (error) {
+    console.error('Metadata parsing error:', error);
     return null;
   }
 }
