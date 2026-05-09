@@ -53,6 +53,7 @@ export default function AppShell({
   const { data: feedData } = useReadContract({
     address: SOCIALVAULT_ADDRESS, abi: SOCIALVAULT_ABI,
     functionName: 'getFeed', args: [BigInt(0), BigInt(20)],
+    query: { enabled: !!SOCIALVAULT_ADDRESS },
   });
 
   const total = feedData?.[1] || BigInt(0);

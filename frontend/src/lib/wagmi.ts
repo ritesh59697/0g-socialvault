@@ -1,4 +1,4 @@
-import { createConfig, http } from 'wagmi';
+import { createConfig, http, cookieStorage, createStorage } from 'wagmi';
 import { defineChain } from 'viem';
 import { injected } from 'wagmi/connectors';
 
@@ -19,4 +19,6 @@ export const wagmiConfig = createConfig({
   chains: [zgMainnet],
   connectors: [injected()],
   transports: { [zgMainnet.id]: http('https://evmrpc.0g.ai') },
+  storage: createStorage({ storage: cookieStorage }),
+  ssr: true,
 });
