@@ -55,37 +55,40 @@ export default function Header({
 
         <button 
           onClick={onToggleTheme} 
-          className="secondary-btn mobile-only" 
+          className="mobile-only"
           style={{ 
             width: 40, height: 40, borderRadius: 10, padding: 0, 
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            background: 'transparent', border: 'none'
+            background: 'transparent', border: 'none',
+            color: theme === 'dark' ? '#fbbf24' : '#ec4899',
           }}
         >
           {theme === 'dark' ? (
-            <Sun size={20} strokeWidth={2.5} color="#fbbf24" />
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>
           ) : (
-            <Moon size={20} strokeWidth={2.5} color="#ec4899" />
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
           )}
         </button>
         
         <div className="header-actions desktop-only">
           <button 
             onClick={onToggleTheme} 
-            className="secondary-btn" 
             style={{
               width: 40, height: 40, borderRadius: 12,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               background: 'var(--bg-secondary)',
               border: '1px solid var(--border)',
               cursor: 'pointer',
-              color: 'var(--accent)'
+              padding: 0,
+              color: theme === 'dark' ? '#fbbf24' : '#ec4899',
+              transition: 'all 0.2s'
             }}
+            title="Toggle Theme"
           >
             {theme === 'dark' ? (
-              <Sun size={20} strokeWidth={2.5} color="#fbbf24" />
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>
             ) : (
-              <Moon size={20} strokeWidth={2.5} color="#ec4899" />
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
             )}
           </button>
 
