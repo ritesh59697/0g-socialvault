@@ -16,14 +16,15 @@
     "react": "19.2.4",
     "react-dom": "19.2.4",
     "viem": "^2.48.8",
-    "wagmi": "^3.6.9"
+    "wagmi": "^3.6.9",
+    "ethers": "^6.13.1",
+    "buffer": "^6.0.3"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "buffer": "^6.0.3",
     "crypto-browserify": "^3.12.1",
     "eslint": "^9",
     "eslint-config-next": "16.2.4",

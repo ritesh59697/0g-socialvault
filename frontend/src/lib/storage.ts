@@ -24,10 +24,16 @@ export interface PostMetadata {
 
 // Inject Buffer polyfill globally before SDK usage
 function ensureBuffer() {
-  if (typeof window !== 'undefined' && !(window as any).Buffer) {
-    import('buffer').then(({ Buffer }) => {
-      (window as any).Buffer = Buffer;
-    });
+  if (typeof window !== 'undefined') {
+    if (!(window as any).Buffer) {
+      try {
+        const { Buffer } = require('buffer');
+        (window as any).Buffer = Buffer;
+        (globalThis as any).Buffer = Buffer;
+      } catch (e) {
+        console.error('Failed to polyfill Buffer:', e);
+      }
+    }
   }
 }
 
@@ -39,22 +45,18 @@ export async function uploadToZeroG(
   // Ensure Buffer is available globally (required by ethers + 0g-ts-sdk)
   ensureBuffer();
 
-  onProgress?.('Loading 0G Storage SDK...');
+  onProgress?.('Initializing 0G SDK...');
 
-  // Dynamically import — keeps them out of the main bundle
-  const [{ Blob: ZgBlob, Indexer }, { ethers }, bufferMod] =
-    await Promise.all([
-      import('@0gfoundation/0g-storage-ts-sdk'),
-      import('ethers'),
-      import('buffer'),
-    ]);
-  const Buf = bufferMod.Buffer;
+  try {
+    // Dynamically import — keeps them out of the main bundle
+    const [{ Blob: ZgBlob, Indexer }, { ethers }] =
+      await Promise.all([
+        import('@0gfoundation/0g-storage-ts-sdk'),
+        import('ethers'),
+      ]);
 
-  // Make Buffer available synchronously before SDK calls
-  if (typeof window !== 'undefined') {
-    (window as any).Buffer = Buf;
-    (globalThis as any).Buffer = Buf;
-  }
+    // Re-verify Buffer after dynamic imports which might affect global state
+    ensureBuffer();
 
   onProgress?.('Connecting wallet...');
 
@@ -75,32 +77,39 @@ export async function uploadToZeroG(
   // Pass the file directly to ZgBlob
   const zgBlob = new ZgBlob(file);
 
-  onProgress?.(`Uploading ${file.name} to 0G Storage...`);
-  const indexer = new Indexer(INDEXER_RPC);
-  const [tx, err] = await indexer.upload(zgBlob, EVM_RPC, signer as any);
+    onProgress?.(`Uploading ${file.name} to 0G Storage...`);
+    const indexer = new Indexer(INDEXER_RPC);
+    const [tx, err] = await indexer.upload(zgBlob, EVM_RPC, signer as any);
 
-  if (err) throw new Error(`0G Storage upload failed: ${String(err)}`);
-  if (!tx) throw new Error('Upload returned no transaction — check your network and wallet balance.');
+    if (err) {
+      console.error('0G Upload Error details:', err);
+      throw new Error(`0G Storage upload failed: ${String(err)}`);
+    }
+    if (!tx) throw new Error('Upload returned no transaction — check your network and wallet balance.');
 
-  const rootHash: string =
-    typeof (tx as any).rootHash === 'string'
-      ? (tx as any).rootHash
-      : (tx as any).rootHashes?.[0] ?? '';
-  const txHash: string =
-    typeof (tx as any).txHash === 'string'
-      ? (tx as any).txHash
-      : (tx as any).txHashes?.[0] ?? '';
+    const rootHash: string =
+      typeof (tx as any).rootHash === 'string'
+        ? (tx as any).rootHash
+        : (tx as any).rootHashes?.[0] ?? '';
+    const txHash: string =
+      typeof (tx as any).txHash === 'string'
+        ? (tx as any).txHash
+        : (tx as any).txHashes?.[0] ?? '';
 
-  if (!rootHash) throw new Error('Upload succeeded but no root hash returned.');
+    if (!rootHash) throw new Error('Upload succeeded but no root hash returned.');
 
-  return {
-    rootHash,
-    txHash,
-    scanUrl: storageScanUrlForTx(txHash),
-    fileName: file.name,
-    fileType: file.type,
-    fileSize: file.size,
-  };
+    return {
+      rootHash,
+      txHash,
+      scanUrl: storageScanUrlForTx(txHash),
+      fileName: file.name,
+      fileType: file.type,
+      fileSize: file.size,
+    };
+  } catch (error: any) {
+    console.error('Full 0G Upload Failure:', error);
+    throw error;
+  }
 }
 
 export async function downloadFromZeroG(rootHash: string): Promise<Blob> {
