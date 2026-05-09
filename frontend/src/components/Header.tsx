@@ -1,5 +1,4 @@
-'use client';
-import { useEffect, useState } from 'react';
+import { Sun, Moon, Menu, ShieldCheck, LogOut, Wallet } from 'lucide-react';
 
 type Tab = 'home' | 'feed' | 'explore' | 'profile' | 'about';
 
@@ -38,10 +37,10 @@ export default function Header({
           className="secondary-btn mobile-only" 
           style={{ 
             width: 40, height: 40, borderRadius: 10, padding: 0, 
-            display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20 
+            display: 'flex', alignItems: 'center', justifyContent: 'center'
           }}
         >
-          ☰
+          <Menu size={20} />
         </button>
         
         <h1 className="header-title" style={{ 
@@ -57,44 +56,56 @@ export default function Header({
         <div className="mobile-only" style={{ width: 40 }} /> {/* Spacer to keep title centered */}
         
         <div className="header-actions desktop-only">
-          <button onClick={onToggleTheme} className="secondary-btn desktop-only" style={{
+          <button onClick={onToggleTheme} className="secondary-btn" style={{
             width: 38, height: 38, borderRadius: 12,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: 16,
             background: 'var(--bg-secondary)',
             border: '1px solid var(--border)'
           }}>
-            {theme === 'dark' ? '☀️' : '🌙'}
+            {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
           </button>
 
-          <div className="glass-panel desktop-only" style={{
-            display: 'flex', alignItems: 'center', gap: 6, padding: '6px 14px',
-            borderRadius: 24, fontSize: 13, fontWeight: 500,
+          <div className="glass-panel" style={{
+            display: 'flex', alignItems: 'center', gap: 8, padding: '6px 16px',
+            borderRadius: 24, fontSize: 13, fontWeight: 700,
             background: isWrongNetwork ? 'rgba(239,68,68,0.05)' : 'rgba(16,185,129,0.05)',
             border: `1px solid ${isWrongNetwork ? 'rgba(239,68,68,0.2)' : 'rgba(16,185,129,0.2)'}`,
             color: isWrongNetwork ? 'var(--error)' : 'var(--success)',
             boxShadow: 'none',
           }}>
-            <span style={{ width: 8, height: 8, borderRadius: '50%', background: isWrongNetwork ? 'var(--error)' : 'var(--success)' }} className="pulse-dot" />
+            <span style={{ 
+              width: 8, height: 8, borderRadius: '50%', 
+              background: isWrongNetwork ? 'var(--error)' : 'var(--success)' 
+            }} className="pulse-dot" />
             {isWrongNetwork ? 'Wrong Network' : '0G Mainnet'}
           </div>
 
           {isConnected && address ? (
-            <div className="desktop-only" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <div className="glass-panel" style={{
+                display: 'flex', alignItems: 'center', gap: 8,
                 padding: '8px 16px', borderRadius: 24, fontSize: 13,
-                color: 'var(--text)', fontWeight: 500, boxShadow: 'none'
+                color: 'var(--text)', fontWeight: 600, boxShadow: 'none'
               }}>
+                <Wallet size={14} className="text-gradient" />
                 {short(address!)}
               </div>
               <button onClick={onDisconnect} className="secondary-btn" style={{
-                padding: '8px 16px', borderRadius: 24, fontSize: 13,
-              }}>Disconnect</button>
+                display: 'flex', alignItems: 'center', gap: 8,
+                padding: '8px 16px', borderRadius: 24, fontSize: 13, fontWeight: 600
+              }}>
+                <LogOut size={14} />
+                Disconnect
+              </button>
             </div>
           ) : (
-            <button onClick={onConnect} className="primary-btn desktop-only" style={{
-              padding: '9px 20px', borderRadius: 24, fontSize: 14,
-            }}>Connect Wallet</button>
+            <button onClick={onConnect} className="primary-btn" style={{
+              display: 'flex', alignItems: 'center', gap: 8,
+              padding: '9px 24px', borderRadius: 24, fontSize: 14,
+            }}>
+              <Wallet size={16} />
+              Connect Wallet
+            </button>
           )}
         </div>
       </div>

@@ -1,6 +1,6 @@
-'use client';
 import { useEffect, useMemo, useState } from 'react';
 import { downloadFromZeroG, downloadPostMetadata, type PostMetadata } from '@/lib/storage';
+import { Loader2, AlertCircle, FileDigit } from 'lucide-react';
 
 const IMAGE = 1;
 const VIDEO = 2;
@@ -42,7 +42,6 @@ export default function MediaPreview({
       setError('');
 
       try {
-        // Fetch metadata and media in parallel to cut latency in half
         const [nextMetadata, rawBlob] = await Promise.all([
           metadataRootHash 
             ? downloadPostMetadata(metadataRootHash).catch(() => null) 
@@ -87,17 +86,24 @@ export default function MediaPreview({
 
       {status === 'loading' && (
         <div className="glass-panel" style={{ padding: compact ? 24 : 48, textAlign: 'center', boxShadow: 'none', background: 'var(--bg-secondary)', border: '1px dashed var(--border)' }}>
-          <div className="main-spinner" style={{ marginBottom: 20 }} />
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 20 }}>
+            <Loader2 size={32} className="spin" style={{ color: 'var(--accent)' }} />
+          </div>
           <div style={{ color: 'var(--text)', fontWeight: 700, fontSize: 15, marginBottom: 4 }}>Buffering from 0G Storage...</div>
           <div style={{ color: 'var(--text-muted)', fontSize: 12 }}>Retrieving decentralized blocks</div>
         </div>
       )}
 
       {status === 'error' && (
-        <div style={{ padding: '12px 14px', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 'var(--radius-md)', background: 'rgba(239,68,68,0.08)' }}>
-          <div style={{ color: 'var(--error)', fontSize: 13, fontWeight: 600, marginBottom: 4 }}>Media could not be loaded</div>
-          <div style={{ color: 'var(--text-muted)', fontSize: 12 }}>{error}</div>
-          <div style={{ color: 'var(--text-faint)', fontSize: 12, fontFamily: 'monospace', marginTop: 8 }}>{shortHash}</div>
+        <div style={{ padding: '16px', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 'var(--radius-md)', background: 'rgba(239,68,68,0.08)', display: 'flex', gap: 12 }}>
+          <AlertCircle size={20} style={{ color: 'var(--error)', flexShrink: 0 }} />
+          <div>
+            <div style={{ color: 'var(--error)', fontSize: 13, fontWeight: 700, marginBottom: 2 }}>Media could not be loaded</div>
+            <div style={{ color: 'var(--text-muted)', fontSize: 12, lineHeight: 1.4 }}>{error}</div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'var(--text-faint)', fontSize: 11, fontFamily: 'monospace', marginTop: 8 }}>
+              <FileDigit size={12} /> {shortHash}
+            </div>
+          </div>
         </div>
       )}
 

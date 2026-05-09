@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react';
 import { usePublicClient } from 'wagmi';
 import { SOCIALVAULT_ABI, SOCIALVAULT_ADDRESS } from '@/lib/contract';
+import { ExternalLink } from 'lucide-react';
 
 const shortHash = (hash: string) => `${hash.slice(0, 10)}...${hash.slice(-8)}`;
 
@@ -93,7 +94,7 @@ export default function TransactionLink({
     >
       <span style={{ color: 'var(--text-faint)', fontWeight: 500 }}>Tx</span>
       <span style={{ fontFamily: 'monospace', fontSize: 11.5 }}>{shortHash(txHash)}</span>
-      <span style={{ color: 'var(--accent2)' }}>↗</span>
+      <ExternalLink size={12} style={{ color: 'var(--accent2)' }} />
     </a>
   );
 }

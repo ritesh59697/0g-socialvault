@@ -2,13 +2,25 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { SOCIALVAULT_ADDRESS } from '@/lib/contract';
 import { Tab } from '@/lib/types';
+import { 
+  Home, 
+  LayoutGrid, 
+  Compass, 
+  User, 
+  Info, 
+  Moon, 
+  Sun, 
+  X, 
+  Zap, 
+  ExternalLink 
+} from 'lucide-react';
 
-const TABS: { key: Tab; label: string; icon: string }[] = [
-  { key: 'home',    label: 'Home',        icon: '🏠' },
-  { key: 'feed',    label: 'Global Feed', icon: '📰' },
-  { key: 'explore', label: 'Explore',     icon: '🧭' },
-  { key: 'profile', label: 'My Profile',  icon: '👤' },
-  { key: 'about',   label: 'About',       icon: '✨' },
+const TABS: { key: Tab; label: string; icon: any }[] = [
+  { key: 'home',    label: 'Home',        icon: Home },
+  { key: 'feed',    label: 'Global Feed', icon: LayoutGrid },
+  { key: 'explore', label: 'Explore',     icon: Compass },
+  { key: 'profile', label: 'My Profile',  icon: User },
+  { key: 'about',   label: 'About',       icon: Info },
 ];
 
 export default function Sidebar({
@@ -40,7 +52,7 @@ export default function Sidebar({
 
       <aside className={`sidebar ${isOpen ? 'sidebar-open' : ''}`} style={{ zIndex: 999 }}>
         
-        {/* Brand - PRESERVING ORIGINAL LOGO */}
+        {/* Brand */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 32 }}>
           <Link href="/" onClick={() => { setActiveTab('home'); onClose(); }} className="sidebar-brand" style={{ textDecoration: 'none', color: 'inherit' }}>
             <svg width="130" height="28" viewBox="0 0 160 34" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -70,16 +82,19 @@ export default function Sidebar({
               width: 32, height: 32, borderRadius: 8,
               background: 'var(--bg-secondary)', border: '1px solid var(--border)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: 14, cursor: 'pointer', color: 'var(--text-muted)',
-            }}>✕</button>
+              cursor: 'pointer', color: 'var(--text-muted)',
+            }}>
+              <X size={16} />
+            </button>
           </div>
         </div>
 
-        {/* Nav - PRESERVING CLICKING DESIGN */}
+        {/* Nav */}
         <nav className="sidebar-nav">
           <div className="sidebar-menu-label">Menu</div>
           {TABS.map(t => {
             const active = activeTab === t.key;
+            const Icon = t.icon;
             const href = t.key === 'profile'
               ? (mounted && address ? `/profile/${address}` : undefined)
               : (t.key === 'home' ? '/' : `/?tab=${t.key}`);
@@ -93,9 +108,10 @@ export default function Sidebar({
 
             const content = (
               <>
-                <span className="tab-icon" style={{ fontSize: 17, filter: active ? 'none' : 'grayscale(80%) opacity(0.5)', transition: 'filter 0.2s' }}>
-                  {t.icon}
-                </span>
+                <Icon size={18} strokeWidth={active ? 2.5 : 2} style={{ 
+                  color: active ? 'var(--accent)' : 'var(--text-faint)',
+                  transition: 'all 0.2s'
+                }} />
                 <span style={{ fontWeight: active ? 700 : 500 }}>{t.label}</span>
               </>
             );
@@ -135,10 +151,12 @@ export default function Sidebar({
             background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)',
             color: 'var(--error)', fontSize: 13, fontWeight: 600,
             cursor: 'pointer', fontFamily: 'inherit', marginBottom: 12
-          }}>⚠️ Switch to 0G Mainnet</button>
+          }}>
+            <Zap size={14} fill="currentColor" /> Switch to 0G Mainnet
+          </button>
         )}
 
-        {/* Stats widget - NEW VERSION */}
+        {/* Stats widget */}
         <div style={{ marginTop: 'auto' }}>
           <div style={{
             background: 'var(--bg-secondary)', border: '1px solid var(--border)',
@@ -172,23 +190,26 @@ export default function Sidebar({
 
             <div style={{ borderTop: '1px solid var(--border)', marginTop: 10, paddingTop: 10, display: 'flex', flexDirection: 'column', gap: 5 }}>
               {[
-                { label: 'ChainScan ↗', url: `https://chainscan.0g.ai/address/${SOCIALVAULT_ADDRESS}` },
-                { label: 'StorageScan ↗', url: 'https://storagescan.0g.ai' },
+                { label: 'ChainScan', url: `https://chainscan.0g.ai/address/${SOCIALVAULT_ADDRESS}` },
+                { label: 'StorageScan', url: 'https://storagescan.0g.ai' },
               ].map(link => (
                 <a key={link.label} href={link.url} target="_blank" rel="noreferrer" style={{
                   fontSize: 11, color: 'var(--accent)', fontWeight: 700,
                   padding: '5px 10px', borderRadius: 6,
                   background: 'rgba(109,67,242,0.07)',
-                  textDecoration: 'none', display: 'block', transition: 'background 0.2s',
+                  textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'space-between', transition: 'background 0.2s',
                 }}
                 onMouseEnter={e => e.currentTarget.style.background = 'rgba(109,67,242,0.14)'}
                 onMouseLeave={e => e.currentTarget.style.background = 'rgba(109,67,242,0.07)'}
-                >{link.label}</a>
+                >
+                  {link.label}
+                  <ExternalLink size={10} />
+                </a>
               ))}
             </div>
           </div>
 
-          {/* Wallet section - NEW VERSION */}
+          {/* Wallet section */}
           <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 8 }}>
             {mounted && isConnected ? (
               <>

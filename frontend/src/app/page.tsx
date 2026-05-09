@@ -12,13 +12,22 @@ import PostCard from '@/components/PostCard';
 import ExploreView from '@/components/ExploreView';
 import ProfileView from '@/components/ProfileView';
 import AboutView from '@/components/AboutView';
-
 import LandingView from '@/components/LandingView';
-
 import { Tab } from '@/lib/types';
-
-
 import { Suspense } from 'react';
+import { 
+  RefreshCw, 
+  Loader2, 
+  Sparkles, 
+  User, 
+  Wallet,
+  AlertCircle,
+  Database,
+  Search,
+  ShieldCheck,
+  Zap,
+  Globe
+} from 'lucide-react';
 
 function HomeContent() {
   const { address, isConnected, chain } = useAccount();
@@ -85,7 +94,6 @@ function HomeContent() {
   async function handleDelete(postId: bigint) {
     if (!confirm('Are you sure you want to delete this post? This will remove it from your feed.')) return;
     saveDeleted(new Set([...deletedPosts, postId.toString()]));
-    // Note: Add on-chain delete call here when contract supports it
   }
 
   const posts = feedData?.[0] || [];
@@ -116,13 +124,13 @@ function HomeContent() {
     const f = e.target.files?.[0];
     if (!f) return;
     if (f.size > 50 * 1024 * 1024) { 
-      setStatus('❌ File too large. Max 50MB.'); 
+      setStatus('File too large. Max 50MB.'); 
       setStatusType('error'); 
-      setTimeout(() => setStatus(''), 5000); // Clear error after 5s
+      setTimeout(() => setStatus(''), 5000);
       return; 
     }
     setFile(f); setPreview(URL.createObjectURL(f)); setStorageProof(null);
-    setStatus(''); // Clear any previous errors if a valid file is selected
+    setStatus('');
   }
   function removeFile() {
     setFile(null); setPreview(''); setStorageProof(null);
@@ -135,36 +143,36 @@ function HomeContent() {
     setUploading(true); setStorageProof(null);
     try {
       if (aiGuardian) {
-        setAiStatus('🔍 AI Agent: Scanning content...');
+        setAiStatus('AI Agent: Scanning content...');
         await new Promise(r => setTimeout(r, 2000));
-        setAiStatus('🛡️ AI Agent: Content verified (Safe)');
+        setAiStatus('AI Agent: Content verified');
         await new Promise(r => setTimeout(r, 1000));
       }
 
       let mediaRootHash = '', metaRootHash = '', mediaType = 0;
       if (file && connectorClient) {
-        setStatus('⚡ Uploading to 0G Storage...'); setStatusType('info');
-        const result = await uploadToZeroG(file, connectorClient, m => setStatus(`⚡ ${m}`));
+        setStatus('Uploading to 0G Storage...'); setStatusType('info');
+        const result = await uploadToZeroG(file, connectorClient, m => setStatus(m));
         mediaRootHash = result.rootHash;
         mediaType = getMediaType(file.type);
         setStorageProof({ rootHash: result.rootHash, scanUrl: result.scanUrl });
-        setStatus('⚡ Uploading metadata...'); setStatusType('info');
+        setStatus('Uploading metadata...'); setStatusType('info');
         const meta = { caption, fileName: result.fileName, fileType: result.fileType, fileSize: result.fileSize, mediaRootHash: result.rootHash, storageScanUrl: result.scanUrl, createdAt: new Date().toISOString() };
         const metaFile = new File([JSON.stringify(meta)], 'metadata.json', { type: 'application/json' });
         const metaResult = await uploadToZeroG(metaFile, connectorClient);
         metaRootHash = metaResult.rootHash;
       }
-      setStatus('⛓️ Writing to 0G Chain...'); setStatusType('info');
+      setStatus('Writing to 0G Chain...'); setStatusType('info');
       const hash = await writeContractAsync({
         address: SOCIALVAULT_ADDRESS, abi: SOCIALVAULT_ABI,
         functionName: 'createPost', args: [mediaRootHash || caption, metaRootHash, mediaType, 500],
       });
-      setStatus(`✅ Posted! TX: ${hash.slice(0, 16)}...`); setStatusType('success');
+      setStatus(`Posted successfully!`); setStatusType('success');
       setCaption(''); removeFile(); setAiStatus('');
       setTimeout(() => { refreshFeed(false); setStatus(''); }, 4000);
     } catch (e: any) {
-      setStatus(`❌ ${e.message?.slice(0, 100)}`); setStatusType('error');
-      setAiStatus('⚠️ AI Analysis failed');
+      setStatus(e.message?.slice(0, 100) || 'Post failed'); setStatusType('error');
+      setAiStatus('AI Analysis failed');
     } finally { setUploading(false); }
   }
 
@@ -184,7 +192,6 @@ function HomeContent() {
       setTippingPostId(postId.toString());
       await writeContractAsync({ address: SOCIALVAULT_ADDRESS, abi: SOCIALVAULT_ABI, functionName: 'tipPost', args: [postId], value: parseEther(amount) });
       
-      // Track tip in local storage for the dashboard
       const post = orderedPosts.find((p: any) => p.id === postId);
       if (post) {
         const addr = post.author.toLowerCase();
@@ -222,10 +229,13 @@ function HomeContent() {
               caption={caption} setCaption={setCaption} isWrongNetwork={!!isWrongNetwork}
               aiGuardian={aiGuardian} setAiGuardian={setAiGuardian} aiStatus={aiStatus} />
           ) : (
-            <div className="glass-panel fade-up" style={{ padding: 32, marginBottom: 32, textAlign: 'center' }}>
-              <div style={{ fontSize: 32, marginBottom: 12 }}>🔮</div>
-              <p style={{ color: 'var(--text-muted)', marginBottom: 20, fontSize: 15 }}>Connect your wallet to start posting on the 0G Chain.</p>
-              <button onClick={doConnect} className="primary-btn" style={{ padding: '12px 28px', borderRadius: 24, fontSize: 15 }}>Connect Wallet</button>
+            <div className="glass-panel fade-up" style={{ padding: 48, marginBottom: 32, textAlign: 'center' }}>
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 20 }}>
+                <Globe size={48} className="text-gradient" />
+              </div>
+              <h3 style={{ fontSize: 20, fontWeight: 800, marginBottom: 12, color: 'var(--text)' }}>Connect to the Network</h3>
+              <p style={{ color: 'var(--text-muted)', marginBottom: 24, fontSize: 15, fontWeight: 500 }}>Join the conversation by connecting your wallet to the 0G Chain.</p>
+              <button onClick={doConnect} className="primary-btn" style={{ padding: '12px 32px', borderRadius: 24, fontSize: 15, fontWeight: 800 }}>Connect Wallet</button>
             </div>
           )}
 
@@ -236,7 +246,7 @@ function HomeContent() {
             marginBottom: 24, 
             marginTop: 12 
           }}>
-            <h2 style={{ fontSize: 18, fontWeight: 700, color: 'var(--text)', margin: 0 }}>Latest Activity</h2>
+            <h2 style={{ fontSize: 18, fontWeight: 800, color: 'var(--text)', margin: 0 }}>Latest Activity</h2>
             <button 
               onClick={() => refreshFeed()} 
               disabled={isFetching || refreshingFeed} 
@@ -254,38 +264,42 @@ function HomeContent() {
                 transition: 'all 0.2s'
               }}
             >
-              {(isFetching || refreshingFeed) ? <span className="mini-spinner" /> : <span style={{ fontSize: 16 }}>↻</span>}
+              {(isFetching || refreshingFeed) ? <Loader2 size={16} className="spin" /> : <RefreshCw size={16} />}
               {(isFetching || refreshingFeed) ? 'Syncing...' : 'Refresh Feed'}
             </button>
           </div>
 
           {orderedPosts.length === 0 ? (
             isFetching || refreshingFeed ? (
-              <div className="glass-panel" style={{ padding: '64px 24px', textAlign: 'center' }}>
-                <div style={{ fontSize: 32, marginBottom: 16 }} className="pulse-dot">⏳</div>
-                <p style={{ color: 'var(--text-muted)', fontSize: 15 }}>Loading the latest posts...</p>
+              <div className="glass-panel" style={{ padding: '80px 24px', textAlign: 'center' }}>
+                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 20 }}>
+                  <Loader2 size={32} className="spin" style={{ color: 'var(--accent)' }} />
+                </div>
+                <p style={{ color: 'var(--text-muted)', fontSize: 15, fontWeight: 500 }}>Syncing with 0G Mainnet...</p>
               </div>
             ) : (
-              <div className="glass-panel" style={{ padding: '64px 24px', textAlign: 'center' }}>
-                <div style={{ fontSize: 48, marginBottom: 16 }}>✨</div>
-                <p style={{ color: 'var(--text-muted)', fontSize: 15 }}>No posts found. Be the first to create one!</p>
+              <div className="glass-panel" style={{ padding: '80px 24px', textAlign: 'center' }}>
+                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 20 }}>
+                  <Sparkles size={48} style={{ color: 'var(--text-faint)' }} />
+                </div>
+                <p style={{ color: 'var(--text-muted)', fontSize: 15, fontWeight: 500 }}>No posts found. Be the first to secure content on 0G!</p>
               </div>
             )
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
               {refreshingFeed && (
                 <div className="glass-panel" style={{
-                  padding: '18px 20px',
+                  padding: '20px 24px',
                   display: 'flex',
                   alignItems: 'center',
-                  gap: 12,
+                  gap: 16,
                   background: 'var(--bg-secondary)',
                   boxShadow: 'none',
                 }}>
-                  <span className="mini-spinner" />
+                  <Loader2 size={18} className="spin" style={{ color: 'var(--accent)' }} />
                   <div>
-                    <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)' }}>Refreshing feed</div>
-                    <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>Fetching newest posts from 0G Mainnet...</div>
+                    <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--text)' }}>Syncing Feed</div>
+                    <div style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 500 }}>Fetching new data from 0G Mainnet nodes...</div>
                   </div>
                 </div>
               )}
@@ -322,11 +336,13 @@ function HomeContent() {
               isWrongNetwork={!!isWrongNetwork}
             />
           ) : (
-            <div className="glass-panel fade-up" style={{ padding: 48, textAlign: 'center', maxWidth: 500, margin: '40px auto' }}>
-              <div style={{ fontSize: 48, marginBottom: 20 }}>👤</div>
-              <h2 style={{ fontSize: 24, fontWeight: 800, marginBottom: 12 }}>Connect your wallet</h2>
-              <p style={{ color: 'var(--text-muted)', marginBottom: 32, fontSize: 16 }}>Please connect your wallet to view your personal profile, stats, and tip history.</p>
-              <button onClick={doConnect} className="primary-btn" style={{ padding: '14px 32px', borderRadius: 24, fontSize: 16 }}>Connect Wallet</button>
+            <div className="glass-panel fade-up" style={{ padding: 64, textAlign: 'center', maxWidth: 500, margin: '40px auto' }}>
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 24 }}>
+                <User size={64} style={{ color: 'var(--text-faint)' }} />
+              </div>
+              <h2 style={{ fontSize: 24, fontWeight: 800, marginBottom: 12, color: 'var(--text)' }}>Wallet Identity Required</h2>
+              <p style={{ color: 'var(--text-muted)', marginBottom: 32, fontSize: 16, lineHeight: 1.6, fontWeight: 500 }}>Please connect your wallet to view your 0G personal profile, statistics, and creator history.</p>
+              <button onClick={doConnect} className="primary-btn" style={{ padding: '14px 40px', borderRadius: 24, fontSize: 16, fontWeight: 800 }}>Connect Wallet</button>
             </div>
           )}
         </div>
@@ -340,7 +356,10 @@ export default function Home() {
   return (
     <Suspense fallback={
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', background: '#09090b', color: 'white' }}>
-        <div className="pulse-dot">Loading SocialVault...</div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <Loader2 size={24} className="spin" style={{ color: 'var(--accent)' }} />
+          <div style={{ fontSize: 14, fontWeight: 800, letterSpacing: 1, textTransform: 'uppercase' }}>SocialVault</div>
+        </div>
       </div>
     }>
       <HomeContent />

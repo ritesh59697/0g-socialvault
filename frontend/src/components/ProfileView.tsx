@@ -3,12 +3,24 @@ import MediaPreview from '@/components/MediaPreview';
 import ProfileAvatar from '@/components/ProfileAvatar';
 import PostCard from '@/components/PostCard';
 import { formatEther } from 'viem';
+import { 
+  User, 
+  MapPin, 
+  Calendar, 
+  FileText, 
+  Coins, 
+  Users, 
+  Settings, 
+  Info, 
+  BarChart3, 
+  History, 
+  Sparkles,
+  Camera,
+  CheckCircle2,
+  AlertCircle
+} from 'lucide-react';
 
 const ZERO_G_LOGO = "https://pbs.twimg.com/profile_images/2038084529374867456/Oq74BA_I_400x400.jpg";
-
-const OGLogo = ({ size = 20 }: { size?: number }) => (
-  <img src={ZERO_G_LOGO} alt="0G" style={{ width: size, height: size, borderRadius: '50%' }} />
-);
 
 export default function ProfileView({
   address, isConnected, posts, onConnect, isOwnProfile = true, connectedAddress,
@@ -32,7 +44,6 @@ export default function ProfileView({
   const [activeSubTab, setActiveSubTab] = useState<'posts' | 'earnings' | 'info'>('posts');
   const [deletedPosts, setDeletedPosts] = useState<Set<string>>(new Set());
 
-  // Load deleted posts from localStorage
   useEffect(() => {
     const saved = localStorage.getItem('sv_deleted_posts');
     if (saved) setDeletedPosts(new Set(JSON.parse(saved)));
@@ -48,6 +59,7 @@ export default function ProfileView({
     saveDeleted(new Set([...deletedPosts, postId.toString()]));
     if (onDelete) onDelete(postId);
   };
+
   const [bio, setBio] = useState('');
   const [username, setUsername] = useState('');
   const [avatarUrl, setAvatarUrl] = useState('');
@@ -59,7 +71,6 @@ export default function ProfileView({
   const [following, setFollowing] = useState<string[]>([]);
   const [tips, setTips] = useState<any[]>([]);
 
-  // Load profile data from localStorage
   useEffect(() => {
     if (address) {
       const addr = address.toLowerCase();
@@ -70,15 +81,11 @@ export default function ProfileView({
       const savedFollowers = localStorage.getItem(`sv_followers_${addr}`);
       if (savedFollowers) setFollowers(JSON.parse(savedFollowers));
 
-      // Simulated tipping history for demo
       const savedTips = localStorage.getItem(`sv_tips_${addr}`);
       if (savedTips) {
         const parsed = JSON.parse(savedTips);
-        // Filter out the legacy mock data (IDs 1, 2, 3)
         const realTips = parsed.filter((t: any) => t.id !== 1 && t.id !== 2 && t.id !== 3);
         setTips(realTips);
-        
-        // If we found and removed mock data, update storage to keep it clean
         if (realTips.length !== parsed.length) {
           localStorage.setItem(`sv_tips_${addr}`, JSON.stringify(realTips));
         }
@@ -91,7 +98,6 @@ export default function ProfileView({
     }
   }, [address, connectedAddress, isOwnProfile]);
 
-  // Filter posts for this specific profile
   const profilePosts = useMemo(() => {
     if (!address) return [];
     return posts.filter((p: any) => 
@@ -100,7 +106,6 @@ export default function ProfileView({
     );
   }, [posts, address, deletedPosts]);
 
-  // Calculate total earnings from tips
   const totalEarnings = useMemo(() => {
     return profilePosts.reduce((acc, post) => acc + BigInt(post.tipTotal || 0), BigInt(0));
   }, [profilePosts]);
@@ -110,12 +115,14 @@ export default function ProfileView({
       <div className="glass-panel fade-up profile-empty" style={{
         padding: '64px 24px', textAlign: 'center',
       }}>
-        <div style={{ fontSize: 48, marginBottom: 16 }}>👤</div>
-        <p style={{ color: 'var(--text-muted)', marginBottom: 24, fontSize: 16 }}>
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 20 }}>
+          <User size={64} style={{ color: 'var(--text-faint)' }} />
+        </div>
+        <p style={{ color: 'var(--text-muted)', marginBottom: 24, fontSize: 16, fontWeight: 500 }}>
           {isOwnProfile ? 'Connect your wallet to view your 0G profile' : 'Connect your wallet to view this 0G profile'}
         </p>
         <button onClick={onConnect} className="primary-btn" style={{
-          padding: '12px 28px', borderRadius: 24, fontSize: 15,
+          padding: '12px 32px', borderRadius: 24, fontSize: 15,
         }}>Connect Wallet</button>
       </div>
     );
@@ -165,9 +172,9 @@ export default function ProfileView({
   const isFollowing = following.includes(address.toLowerCase());
 
   const stats = [
-    { label: 'Total Posts', value: profilePosts.length.toString(), color: 'var(--accent)', icon: '📝' },
-    { label: 'Total Tips', value: `${formatEther(totalEarnings).slice(0, 6)} 0G`, color: 'var(--success)', icon: '💰' },
-    { label: 'Followers', value: followers.length.toString(), color: 'var(--accent2)', icon: '👥' },
+    { label: 'Total Posts', value: profilePosts.length.toString(), color: 'var(--accent)', icon: FileText },
+    { label: 'Total Tips', value: `${formatEther(totalEarnings).slice(0, 6)} 0G`, color: 'var(--success)', icon: Coins },
+    { label: 'Followers', value: followers.length.toString(), color: 'var(--accent2)', icon: Users },
   ];
 
   const OGLogo = ({ size = 16, glow = true }: { size?: number, glow?: boolean }) => (
@@ -209,8 +216,8 @@ export default function ProfileView({
             <div style={{ position: 'relative' }}>
               <ProfileAvatar address={address} size={84} />
               <div style={{
-                position: 'absolute', bottom: 4, right: 4, width: 18, height: 18,
-                background: 'var(--success)', borderRadius: '50%', border: '3px solid var(--bg-primary)'
+                position: 'absolute', bottom: 4, right: 4, width: 20, height: 20,
+                background: 'var(--success)', borderRadius: '50%', border: '4px solid var(--bg-primary)'
               }} />
             </div>
             <div style={{ flex: 1 }}>
@@ -222,13 +229,13 @@ export default function ProfileView({
                     </h2>
                     {isOwnProfile && (
                       <span style={{
-                        fontSize: 11, padding: '4px 10px', borderRadius: 20,
-                        background: 'var(--accent-glow)', color: 'var(--accent)', fontWeight: 700,
-                        textTransform: 'uppercase', letterSpacing: 1
+                        fontSize: 11, padding: '4px 12px', borderRadius: 20,
+                        background: 'var(--accent-glow)', color: 'var(--accent)', fontWeight: 800,
+                        textTransform: 'uppercase', letterSpacing: 1.2
                       }}>Owner</span>
                     )}
                   </div>
-                  <div style={{ fontSize: 14, color: 'var(--text-muted)', fontFamily: 'monospace', marginTop: 4, letterSpacing: 0.5 }}>
+                  <div style={{ fontSize: 14, color: 'var(--text-muted)', fontFamily: 'monospace', marginTop: 4, letterSpacing: 0.5, fontWeight: 500 }}>
                     {address}
                   </div>
                 </div>
@@ -237,7 +244,7 @@ export default function ProfileView({
                   <button
                     onClick={isFollowing ? handleUnfollow : handleFollow}
                     className={isFollowing ? 'secondary-btn' : 'primary-btn'}
-                    style={{ padding: '10px 24px', borderRadius: 24, fontSize: 14 }}
+                    style={{ padding: '10px 28px', borderRadius: 24, fontSize: 14, fontWeight: 700 }}
                   >
                     {isFollowing ? 'Unfollow' : 'Follow'}
                   </button>
@@ -246,85 +253,93 @@ export default function ProfileView({
                   <button
                     onClick={startEditing}
                     className="secondary-btn"
-                    style={{ padding: '8px 16px', borderRadius: 24, fontSize: 13, display: 'flex', alignItems: 'center', gap: 6 }}
+                    style={{ padding: '10px 20px', borderRadius: 24, fontSize: 13, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 8 }}
                   >
-                    <span>⚙️</span> Edit Profile
+                    <Settings size={16} /> Edit Profile
                   </button>
                 )}
               </div>
 
-              <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginTop: 12 }}>
-                <div style={{ fontSize: 13, color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <span style={{ opacity: 0.7 }}>📍</span> 0G Mainnet
+              <div style={{ display: 'flex', alignItems: 'center', gap: 20, marginTop: 14 }}>
+                <div style={{ fontSize: 13, color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: 6, fontWeight: 500 }}>
+                  <MapPin size={14} style={{ color: 'var(--accent)' }} /> 0G Mainnet
+                </div>
+                <div style={{ fontSize: 13, color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: 6, fontWeight: 500 }}>
+                  <Calendar size={14} style={{ color: 'var(--accent2)' }} /> Joined May 2026
                 </div>
                 <div style={{ fontSize: 13, color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <span style={{ opacity: 0.7 }}>📅</span> Joined May 2026
+                  <span style={{ fontWeight: 800, color: 'var(--text)' }}>{followers.length}</span> <span style={{ fontWeight: 500 }}>Followers</span>
                 </div>
                 <div style={{ fontSize: 13, color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <span style={{ fontWeight: 700, color: 'var(--text)' }}>{followers.length}</span> Followers
-                </div>
-                <div style={{ fontSize: 13, color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <span style={{ fontWeight: 700, color: 'var(--text)' }}>{isOwnProfile ? following.length : '—'}</span> Following
+                  <span style={{ fontWeight: 800, color: 'var(--text)' }}>{isOwnProfile ? following.length : '—'}</span> <span style={{ fontWeight: 500 }}>Following</span>
                 </div>
               </div>
             </div>
           </div>
 
           <div className="profile-stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 16 }}>
-            {stats.map(s => (
-              <div key={s.label} className="glass-panel" style={{
-                padding: '20px 24px', border: '1px solid var(--border)', background: 'var(--bg-secondary)', boxShadow: 'none'
-              }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-                  <span style={{ fontSize: 16 }}>{s.icon}</span>
-                  <div style={{ fontSize: 11, color: 'var(--text-faint)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.8 }}>{s.label}</div>
+            {stats.map(s => {
+              const Icon = s.icon;
+              return (
+                <div key={s.label} className="glass-panel" style={{
+                  padding: '20px 24px', border: '1px solid var(--border)', background: 'var(--bg-secondary)', boxShadow: 'none'
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+                    <Icon size={16} style={{ color: 'var(--text-faint)' }} />
+                    <div style={{ fontSize: 11, color: 'var(--text-faint)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: 1 }}>{s.label}</div>
+                  </div>
+                  <div style={{ fontSize: 24, fontWeight: 900, color: s.color, display: 'flex', alignItems: 'center' }}>
+                    {s.label === 'Total Tips' && <OGLogo size={22} />}
+                    {s.value}
+                  </div>
                 </div>
-                <div style={{ fontSize: 24, fontWeight: 800, color: s.color, display: 'flex', alignItems: 'center' }}>
-                  {s.label === 'Total Tips' && <OGLogo size={22} />}
-                  {s.value}
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       </div>
 
       {/* Tabs / Dashboard Navigation */}
       <div style={{
-        display: 'flex', gap: 8, marginBottom: 24, padding: 6,
+        display: 'flex', gap: 8, marginBottom: 28, padding: 6,
         background: 'var(--bg-secondary)', borderRadius: 16, border: '1px solid var(--border)',
         width: 'fit-content'
       }}>
         {[
-          { key: 'posts', label: 'Post History', icon: '📝' },
-          { key: 'earnings', label: 'Creator Dashboard', icon: '📊' },
-          { key: 'info', label: 'Profile Info', icon: 'ℹ️' },
-        ].map(t => (
-          <button
-            key={t.key}
-            onClick={() => setActiveSubTab(t.key as any)}
-            style={{
-              padding: '10px 20px', borderRadius: 12, border: 'none',
-              background: activeSubTab === t.key ? 'var(--bg-primary)' : 'transparent',
-              color: activeSubTab === t.key ? 'var(--text)' : 'var(--text-muted)',
-              fontSize: 14, fontWeight: 600, cursor: 'pointer',
-              display: 'flex', alignItems: 'center', gap: 8,
-              boxShadow: activeSubTab === t.key ? 'var(--shadow-sm)' : 'none',
-              transition: 'all 0.2s'
-            }}
-          >
-            <span>{t.icon}</span> {t.label}
-          </button>
-        ))}
+          { key: 'posts', label: 'History', icon: History },
+          { key: 'earnings', label: 'Dashboard', icon: BarChart3 },
+          { key: 'info', label: 'Info', icon: Info },
+        ].map(t => {
+          const Icon = t.icon;
+          return (
+            <button
+              key={t.key}
+              onClick={() => setActiveSubTab(t.key as any)}
+              style={{
+                padding: '10px 24px', borderRadius: 12, border: 'none',
+                background: activeSubTab === t.key ? 'var(--bg-primary)' : 'transparent',
+                color: activeSubTab === t.key ? 'var(--text)' : 'var(--text-muted)',
+                fontSize: 14, fontWeight: 700, cursor: 'pointer',
+                display: 'flex', alignItems: 'center', gap: 10,
+                boxShadow: activeSubTab === t.key ? 'var(--shadow-sm)' : 'none',
+                transition: 'all 0.2s'
+              }}
+            >
+              <Icon size={16} /> {t.label}
+            </button>
+          );
+        })}
       </div>
 
       {/* Content Area */}
       {activeSubTab === 'posts' && (
         <div className="fade-up">
           {profilePosts.length === 0 ? (
-            <div className="glass-panel" style={{ padding: '64px 24px', textAlign: 'center' }}>
-              <div style={{ fontSize: 40, marginBottom: 16 }}>✨</div>
-              <p style={{ color: 'var(--text-muted)', fontSize: 16 }}>No posts found for this user.</p>
+            <div className="glass-panel" style={{ padding: '80px 24px', textAlign: 'center' }}>
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 20 }}>
+                <Sparkles size={48} style={{ color: 'var(--text-faint)' }} />
+              </div>
+              <p style={{ color: 'var(--text-muted)', fontSize: 16, fontWeight: 500 }}>No posts found for this user.</p>
             </div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
@@ -356,54 +371,60 @@ export default function ProfileView({
       {activeSubTab === 'earnings' && (
         <div className="fade-up">
           <div className="glass-panel" style={{ padding: 32, border: '1px solid var(--border)' }}>
-            <h3 style={{ fontSize: 18, fontWeight: 700, marginBottom: 24, display: 'flex', alignItems: 'center', gap: 8 }}>
-              <OGLogo size={20} /> Revenue Overview
+            <h3 style={{ fontSize: 18, fontWeight: 800, marginBottom: 28, display: 'flex', alignItems: 'center', gap: 10 }}>
+              <BarChart3 size={20} className="text-gradient" /> Revenue Overview
             </h3>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 20, marginBottom: 32 }}>
-              <div style={{ padding: 24, borderRadius: 20, background: 'linear-gradient(135deg, rgba(139,92,246,0.1), rgba(6,182,212,0.1))', border: '1px solid var(--border)' }}>
-                <div style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase', marginBottom: 8 }}>Total Tips Received</div>
-                <div style={{ fontSize: 32, fontWeight: 800, color: 'var(--text)', display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <OGLogo size={32} /> {formatEther(totalEarnings).slice(0, 8)} <span style={{ fontSize: 16, opacity: 0.7 }}>0G</span>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 24, marginBottom: 40 }}>
+              <div style={{ padding: 28, borderRadius: 24, background: 'linear-gradient(135deg, rgba(139,92,246,0.1), rgba(6,182,212,0.1))', border: '1px solid var(--border)' }}>
+                <div style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 12 }}>Total Tips Received</div>
+                <div style={{ fontSize: 36, fontWeight: 900, color: 'var(--text)', display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <OGLogo size={36} /> {formatEther(totalEarnings).slice(0, 8)} <span style={{ fontSize: 16, opacity: 0.7, fontWeight: 700 }}>0G</span>
                 </div>
                 {totalEarnings > BigInt(0) && (
-                  <div style={{ fontSize: 12, color: 'var(--success)', marginTop: 8, fontWeight: 600 }}>↑ 100% since start</div>
+                  <div style={{ fontSize: 12, color: 'var(--success)', marginTop: 12, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <CheckCircle2 size={14} /> ↑ 100% since start
+                  </div>
                 )}
               </div>
-              <div style={{ padding: 24, borderRadius: 20, background: 'var(--bg-secondary)', border: '1px solid var(--border)' }}>
-                <div style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase', marginBottom: 8 }}>Estimated Payout</div>
-                <div style={{ fontSize: 32, fontWeight: 800, color: 'var(--text)', display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <OGLogo size={32} /> {formatEther(totalEarnings).slice(0, 8)} <span style={{ fontSize: 16, opacity: 0.7 }}>0G</span>
+              <div style={{ padding: 28, borderRadius: 24, background: 'var(--bg-secondary)', border: '1px solid var(--border)' }}>
+                <div style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 12 }}>Available for Withdrawal</div>
+                <div style={{ fontSize: 36, fontWeight: 900, color: 'var(--text)', display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <OGLogo size={36} /> {formatEther(totalEarnings).slice(0, 8)} <span style={{ fontSize: 16, opacity: 0.7, fontWeight: 700 }}>0G</span>
                 </div>
-                <div style={{ fontSize: 12, color: 'var(--text-faint)', marginTop: 8 }}>Standard 0G Mainnet processing</div>
+                <div style={{ fontSize: 12, color: 'var(--text-faint)', marginTop: 12, fontWeight: 600 }}>Standard 0G Mainnet settlement</div>
               </div>
             </div>
 
-            <h4 style={{ fontSize: 15, fontWeight: 700, marginBottom: 16, color: 'var(--text)' }}>Recent Tipping History</h4>
+            <h4 style={{ fontSize: 15, fontWeight: 800, marginBottom: 20, color: 'var(--text)', display: 'flex', alignItems: 'center', gap: 8 }}>
+              <History size={16} /> Recent Tipping History
+            </h4>
             <div style={{ border: '1px solid var(--border)', borderRadius: 16, overflow: 'hidden', background: 'var(--bg-secondary)' }}>
               {tips.length === 0 ? (
-                <div style={{ padding: 48, textAlign: 'center' }}>
-                  <div style={{ fontSize: 24, marginBottom: 12 }}>🍃</div>
-                  <p style={{ color: 'var(--text-muted)' }}>No tips received yet.</p>
+                <div style={{ padding: 64, textAlign: 'center' }}>
+                  <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 16 }}>
+                    <Coins size={32} style={{ color: 'var(--text-faint)' }} />
+                  </div>
+                  <p style={{ color: 'var(--text-muted)', fontWeight: 500 }}>No tips received yet.</p>
                 </div>
               ) : (
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14 }}>
                   <thead>
                     <tr style={{ background: 'rgba(0,0,0,0.03)', borderBottom: '1px solid var(--border)' }}>
-                      <th style={{ textAlign: 'left', padding: '16px 20px', fontWeight: 700, color: 'var(--text-muted)' }}>Sender</th>
-                      <th style={{ textAlign: 'left', padding: '16px 20px', fontWeight: 700, color: 'var(--text-muted)' }}>Amount</th>
-                      <th style={{ textAlign: 'left', padding: '16px 20px', fontWeight: 700, color: 'var(--text-muted)' }}>Time</th>
-                      <th style={{ textAlign: 'right', padding: '16px 20px', fontWeight: 700, color: 'var(--text-muted)' }}>Status</th>
+                      <th style={{ textAlign: 'left', padding: '16px 20px', fontWeight: 800, color: 'var(--text-muted)', fontSize: 11, textTransform: 'uppercase', letterSpacing: 1 }}>Sender</th>
+                      <th style={{ textAlign: 'left', padding: '16px 20px', fontWeight: 800, color: 'var(--text-muted)', fontSize: 11, textTransform: 'uppercase', letterSpacing: 1 }}>Amount</th>
+                      <th style={{ textAlign: 'left', padding: '16px 20px', fontWeight: 800, color: 'var(--text-muted)', fontSize: 11, textTransform: 'uppercase', letterSpacing: 1 }}>Time</th>
+                      <th style={{ textAlign: 'right', padding: '16px 20px', fontWeight: 800, color: 'var(--text-muted)', fontSize: 11, textTransform: 'uppercase', letterSpacing: 1 }}>Status</th>
                     </tr>
                   </thead>
                   <tbody>
                     {tips.map(tip => (
                       <tr key={tip.id} style={{ borderBottom: '1px solid var(--border-subtle)' }}>
-                        <td style={{ padding: '16px 20px', fontWeight: 600, color: 'var(--accent)' }}>{tip.from}</td>
-                        <td style={{ padding: '16px 20px', fontWeight: 700, color: 'var(--text)' }}>{tip.amount} 0G</td>
-                        <td style={{ padding: '16px 20px', color: 'var(--text-muted)' }}>{tip.time}</td>
+                        <td style={{ padding: '16px 20px', fontWeight: 700, color: 'var(--accent)' }}>{tip.from}</td>
+                        <td style={{ padding: '16px 20px', fontWeight: 800, color: 'var(--text)' }}>{tip.amount} 0G</td>
+                        <td style={{ padding: '16px 20px', color: 'var(--text-muted)', fontWeight: 500 }}>{tip.time}</td>
                         <td style={{ padding: '16px 20px', textAlign: 'right' }}>
-                          <span style={{ fontSize: 11, padding: '4px 10px', background: 'rgba(16,185,129,0.1)', color: 'var(--success)', borderRadius: 20, fontWeight: 700 }}>RECEIVED</span>
+                          <span style={{ fontSize: 11, padding: '4px 12px', background: 'rgba(16,185,129,0.1)', color: 'var(--success)', borderRadius: 20, fontWeight: 800 }}>COMPLETED</span>
                         </td>
                       </tr>
                     ))}
@@ -418,36 +439,38 @@ export default function ProfileView({
       {activeSubTab === 'info' && (
         <div className="fade-up">
           <div className="glass-panel" style={{ padding: 32, border: '1px solid var(--border)' }}>
-            <h3 style={{ fontSize: 18, fontWeight: 700, marginBottom: 24 }}>👤 Profile Details</h3>
+            <h3 style={{ fontSize: 18, fontWeight: 800, marginBottom: 28, display: 'flex', alignItems: 'center', gap: 10 }}>
+              <User size={20} className="text-gradient" /> Profile Details
+            </h3>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
               {isEditing ? (
-                <div className="fade-up" style={{ display: 'flex', flexDirection: 'column', gap: 24, padding: 24, background: 'rgba(139,92,246,0.03)', borderRadius: 20, border: '1px solid var(--accent-glow)' }}>
-                  <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--accent)', marginBottom: 4 }}>Edit Profile Settings</div>
+                <div className="fade-up" style={{ display: 'flex', flexDirection: 'column', gap: 24, padding: 28, background: 'rgba(139,92,246,0.03)', borderRadius: 24, border: '1px solid var(--accent-glow)' }}>
+                  <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--accent)', marginBottom: 4 }}>Identity Settings</div>
 
                   <div>
-                    <label style={{ fontSize: 12, color: 'var(--text-faint)', fontWeight: 700, textTransform: 'uppercase', marginBottom: 8, display: 'block' }}>Display Name</label>
+                    <label style={{ fontSize: 11, color: 'var(--text-faint)', fontWeight: 800, textTransform: 'uppercase', marginBottom: 10, display: 'block', letterSpacing: 1 }}>Display Name</label>
                     <input
                       type="text"
                       value={tempUsername}
                       onChange={e => setTempUsername(e.target.value)}
-                      placeholder="Enter username..."
+                      placeholder="What should we call you?"
                       style={{
-                        width: '100%', padding: '12px 16px', background: 'var(--surface)',
-                        border: '1px solid var(--border)', borderRadius: 12, color: 'var(--text)',
-                        fontSize: 14, outline: 'none'
+                        width: '100%', padding: '14px 20px', background: 'var(--surface)',
+                        border: '1px solid var(--border)', borderRadius: 14, color: 'var(--text)',
+                        fontSize: 14, outline: 'none', fontWeight: 600
                       }}
                     />
                   </div>
 
                   <div>
-                    <label style={{ fontSize: 12, color: 'var(--text-faint)', fontWeight: 700, textTransform: 'uppercase', marginBottom: 8, display: 'block' }}>Profile Picture</label>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+                    <label style={{ fontSize: 11, color: 'var(--text-faint)', fontWeight: 800, textTransform: 'uppercase', marginBottom: 10, display: 'block', letterSpacing: 1 }}>Profile Media</label>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
                       <label className="secondary-btn" style={{ 
-                        display: 'inline-flex', padding: '10px 20px', borderRadius: 20, cursor: 'pointer',
-                        fontSize: 13, fontWeight: 600, border: '1px dashed var(--border)', background: 'rgba(255,255,255,0.03)'
+                        display: 'inline-flex', alignItems: 'center', gap: 10, padding: '12px 24px', borderRadius: 24, cursor: 'pointer',
+                        fontSize: 13, fontWeight: 700, border: '1px dashed var(--border)', background: 'rgba(255,255,255,0.03)'
                       }}>
-                        <span>📸 Upload Photo</span>
+                        <Camera size={18} /> Choose Photo
                         <input 
                           type="file" 
                           accept="image/*" 
@@ -465,68 +488,69 @@ export default function ProfileView({
                         />
                       </label>
                       {tempAvatarUrl && (
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                          <img src={tempAvatarUrl} alt="Preview" style={{ width: 40, height: 40, borderRadius: '50%', objectFit: 'cover', border: '1px solid var(--border)' }} />
-                          <button onClick={() => setTempAvatarUrl('')} style={{ background: 'none', border: 'none', color: 'var(--error)', cursor: 'pointer', fontSize: 12 }}>Remove</button>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                          <img src={tempAvatarUrl} alt="Preview" style={{ width: 48, height: 48, borderRadius: '50%', objectFit: 'cover', border: '2px solid var(--accent)' }} />
+                          <button onClick={() => setTempAvatarUrl('')} style={{ background: 'none', border: 'none', color: 'var(--error)', cursor: 'pointer', fontSize: 13, fontWeight: 700 }}>Remove</button>
                         </div>
                       )}
                     </div>
-                    <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 6 }}>Upload a square image for best results.</div>
                   </div>
 
                   <div>
-                    <label style={{ fontSize: 12, color: 'var(--text-faint)', fontWeight: 700, textTransform: 'uppercase', marginBottom: 8, display: 'block' }}>Bio</label>
+                    <label style={{ fontSize: 11, color: 'var(--text-faint)', fontWeight: 800, textTransform: 'uppercase', marginBottom: 10, display: 'block', letterSpacing: 1 }}>Personal Bio</label>
                     <textarea
                       value={tempBio}
                       onChange={e => setTempBio(e.target.value)}
-                      placeholder="Tell the world about yourself..."
+                      placeholder="Share your story with the 0G community..."
                       style={{
-                        width: '100%', minHeight: 120, padding: 16, background: 'var(--surface)',
-                        border: '1px solid var(--border)', borderRadius: 12, color: 'var(--text)',
-                        fontSize: 14, outline: 'none', resize: 'vertical'
+                        width: '100%', minHeight: 140, padding: 20, background: 'var(--surface)',
+                        border: '1px solid var(--border)', borderRadius: 14, color: 'var(--text)',
+                        fontSize: 14, outline: 'none', resize: 'vertical', lineHeight: 1.6, fontWeight: 500
                       }}
                     />
                   </div>
 
-                  <div style={{ display: 'flex', gap: 12, marginTop: 8 }}>
-                    <button onClick={saveProfile} className="primary-btn" style={{ padding: '10px 24px', borderRadius: 24, fontSize: 14 }}>Save Changes</button>
-                    <button onClick={() => setIsEditing(false)} className="secondary-btn" style={{ padding: '10px 24px', borderRadius: 24, fontSize: 14 }}>Cancel</button>
+                  <div style={{ display: 'flex', gap: 12, marginTop: 12 }}>
+                    <button onClick={saveProfile} className="primary-btn" style={{ padding: '12px 32px', borderRadius: 24, fontSize: 14, fontWeight: 800 }}>Save Changes</button>
+                    <button onClick={() => setIsEditing(false)} className="secondary-btn" style={{ padding: '12px 32px', borderRadius: 24, fontSize: 14, fontWeight: 800 }}>Cancel</button>
                   </div>
                 </div>
               ) : (
                 <>
                   <div>
-                    <div style={{ fontSize: 12, color: 'var(--text-faint)', fontWeight: 700, textTransform: 'uppercase', marginBottom: 8 }}>Wallet Address</div>
+                    <div style={{ fontSize: 11, color: 'var(--text-faint)', fontWeight: 800, textTransform: 'uppercase', marginBottom: 10, letterSpacing: 1 }}>Wallet Identity</div>
                     <div style={{
-                      padding: '12px 16px', background: 'var(--bg-secondary)', borderRadius: 12,
+                      padding: '16px 20px', background: 'var(--bg-secondary)', borderRadius: 14,
                       fontFamily: 'monospace', fontSize: 14, color: 'var(--text)', border: '1px solid var(--border)',
-                      wordBreak: 'break-all'
+                      wordBreak: 'break-all', fontWeight: 600
                     }}>
                       {address}
                     </div>
                   </div>
 
                   <div>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-                      <div style={{ fontSize: 12, color: 'var(--text-faint)', fontWeight: 700, textTransform: 'uppercase' }}>Bio</div>
-                    </div>
+                    <div style={{ fontSize: 11, color: 'var(--text-faint)', fontWeight: 800, textTransform: 'uppercase', marginBottom: 10, letterSpacing: 1 }}>About the Creator</div>
                     <div style={{
-                      padding: '24px', background: 'var(--bg-secondary)', borderRadius: 12,
-                      fontSize: 14, color: bio ? 'var(--text)' : 'var(--text-muted)', border: '1px solid var(--border)',
-                      fontStyle: bio ? 'normal' : 'italic', lineHeight: 1.6
+                      padding: '28px', background: 'var(--bg-secondary)', borderRadius: 14,
+                      fontSize: 15, color: bio ? 'var(--text)' : 'var(--text-muted)', border: '1px solid var(--border)',
+                      fontStyle: bio ? 'normal' : 'italic', lineHeight: 1.7, fontWeight: 500
                     }}>
-                      {bio || "This user hasn't set a bio yet."}
+                      {bio || "This creator is keeping it mysterious for now."}
                     </div>
                   </div>
 
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-                    <div>
-                      <div style={{ fontSize: 12, color: 'var(--text-faint)', fontWeight: 700, textTransform: 'uppercase', marginBottom: 8 }}>Network</div>
-                      <div style={{ fontSize: 14, color: 'var(--text)', fontWeight: 600 }}>0G Mainnet (16661)</div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
+                    <div className="glass-panel" style={{ padding: 20, background: 'var(--bg-secondary)', boxShadow: 'none' }}>
+                      <div style={{ fontSize: 11, color: 'var(--text-faint)', fontWeight: 800, textTransform: 'uppercase', marginBottom: 8, letterSpacing: 1 }}>Connected Network</div>
+                      <div style={{ fontSize: 15, color: 'var(--text)', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <span style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--success)' }} /> 0G Mainnet (16661)
+                      </div>
                     </div>
-                    <div>
-                      <div style={{ fontSize: 12, color: 'var(--text-faint)', fontWeight: 700, textTransform: 'uppercase', marginBottom: 8 }}>Status</div>
-                      <div style={{ fontSize: 14, color: 'var(--success)', fontWeight: 700 }}>✓ Verified Creator</div>
+                    <div className="glass-panel" style={{ padding: 20, background: 'var(--bg-secondary)', boxShadow: 'none' }}>
+                      <div style={{ fontSize: 11, color: 'var(--text-faint)', fontWeight: 800, textTransform: 'uppercase', marginBottom: 8, letterSpacing: 1 }}>Verification Status</div>
+                      <div style={{ fontSize: 15, color: 'var(--success)', fontWeight: 800, display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <CheckCircle2 size={16} /> Verified 0G Native
+                      </div>
                     </div>
                   </div>
                 </>

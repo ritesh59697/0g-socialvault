@@ -1,10 +1,19 @@
-'use client';
 import { SOCIALVAULT_ADDRESS } from '@/lib/contract';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import MediaPreview from '@/components/MediaPreview';
 import ProfileAvatar from '@/components/ProfileAvatar';
 import TransactionLink from '@/components/TransactionLink';
+import { 
+  Heart, 
+  Zap, 
+  Trash2, 
+  Image as ImageIcon, 
+  Video as VideoIcon, 
+  ShieldCheck, 
+  Globe,
+  FileText
+} from 'lucide-react';
 
 const short = (a: string) => `${a.slice(0, 6)}...${a.slice(-4)}`;
 const timeAgo = (ts: bigint) => {
@@ -41,7 +50,6 @@ export default function PostCard({
 
   const mediaType = Number(post.mediaType);
   const normalizedTip = tipAmount || '0.01';
-  const tipLabel = Number(normalizedTip) > 0 ? `Send ${normalizedTip} 0G` : 'Send Tip';
 
   const OGLogo = ({ size = 14, glow = true }: { size?: number, glow?: boolean }) => (
     <div style={{
@@ -86,15 +94,23 @@ export default function PostCard({
           </div>
         </Link>
         <div className="post-badges" style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-          {mediaType === 1 && <span className="glass-panel" style={{ fontSize: 11, padding: '4px 10px', borderRadius: 20, color: 'var(--accent2)', fontWeight: 500, border: 'none', background: 'rgba(6,182,212,0.1)' }}>🖼️ Image</span>}
-          {mediaType === 2 && <span className="glass-panel" style={{ fontSize: 11, padding: '4px 10px', borderRadius: 20, color: 'var(--accent)', fontWeight: 500, border: 'none', background: 'var(--accent-glow)' }}>🎬 Video</span>}
+          {mediaType === 1 && (
+            <span className="glass-panel" style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, padding: '4px 10px', borderRadius: 20, color: 'var(--accent2)', fontWeight: 600, border: 'none', background: 'rgba(6,182,212,0.1)' }}>
+              <ImageIcon size={12} /> Image
+            </span>
+          )}
+          {mediaType === 2 && (
+            <span className="glass-panel" style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, padding: '4px 10px', borderRadius: 20, color: 'var(--accent)', fontWeight: 600, border: 'none', background: 'var(--accent-glow)' }}>
+              <VideoIcon size={12} /> Video
+            </span>
+          )}
           <a href={`https://chainscan.0g.ai/address/${SOCIALVAULT_ADDRESS}`} target="_blank" rel="noopener noreferrer" title="Open the SocialVault contract on 0G ChainScan" style={{
             display: 'flex', alignItems: 'center', gap: 6, padding: '4px 12px',
             borderRadius: 20, background: 'rgba(16,185,129,0.08)',
             border: '1px solid rgba(16,185,129,0.2)', color: 'var(--success)',
-            fontSize: 12, fontWeight: 600, boxShadow: 'none',
+            fontSize: 12, fontWeight: 700, boxShadow: 'none',
           }}>
-            <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--success)', display: 'inline-block' }} className="pulse-dot" />Contract
+            <ShieldCheck size={12} /> Contract
           </a>
         </div>
       </div>
@@ -102,10 +118,13 @@ export default function PostCard({
       {/* Content */}
       <div style={{ marginBottom: 20 }}>
         {mediaType === 0 || isTextPost(post.storageRootHash) ? (
-          <p style={{
-            fontSize: 15, lineHeight: 1.6, color: 'var(--text)',
-            padding: '0 4px', margin: 0,
-          }}>{post.storageRootHash}</p>
+          <div style={{ display: 'flex', gap: 12 }}>
+            <div style={{ color: 'var(--text-faint)', marginTop: 2 }}><FileText size={20} /></div>
+            <p style={{
+              fontSize: 15, lineHeight: 1.6, color: 'var(--text)',
+              padding: '0 4px', margin: 0,
+            }}>{post.storageRootHash}</p>
+          </div>
         ) : (
           <>
             <MediaPreview
@@ -113,8 +132,8 @@ export default function PostCard({
               metadataRootHash={post.metadataRootHash}
               mediaType={mediaType}
             />
-            <div style={{ marginTop: 10, fontSize: 12, color: 'var(--text-faint)', fontFamily: 'monospace' }}>
-              0G root: {post.storageRootHash.slice(0, 18)}...{post.storageRootHash.slice(-8)}
+            <div style={{ marginTop: 10, display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, color: 'var(--text-faint)', fontFamily: 'monospace' }}>
+              <Globe size={11} /> 0G Root: {post.storageRootHash.slice(0, 18)}...{post.storageRootHash.slice(-8)}
             </div>
           </>
         )}
@@ -130,11 +149,11 @@ export default function PostCard({
         borderTop: '1px solid var(--border)',
       }}>
         <div>
-          <div style={{ color: 'var(--text-faint)', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.4 }}>
+          <div style={{ color: 'var(--text-faint)', fontSize: 11, fontWeight: 800, textTransform: 'uppercase', letterSpacing: 0.8 }}>
             Onchain Proof
           </div>
           <div style={{ color: 'var(--text-muted)', fontSize: 12, marginTop: 2 }}>
-            Confirm this post on 0G Mainnet.
+            Verify authenticity on 0G Mainnet
           </div>
         </div>
         <TransactionLink postId={post.id} author={post.author} />
@@ -147,19 +166,17 @@ export default function PostCard({
         <button 
           onClick={onLike} 
           disabled={!isConnected || isWrongNetwork} 
-          className={`secondary-btn ${liked ? 'liked-pulse' : ''}`}
+          className="secondary-btn"
           style={{
-            display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px',
-            borderRadius: 24, fontSize: 13, fontWeight: 600,
+            display: 'flex', alignItems: 'center', gap: 6, padding: '8px 16px',
+            borderRadius: 24, fontSize: 13, fontWeight: 700,
             background: liked ? 'rgba(239,68,68,0.08)' : 'transparent',
-            border: `1px solid ${liked ? 'rgba(239,68,68,0.2)' : 'var(--border)'}`,
+            border: `1px solid ${liked ? 'rgba(239,68,68,0.3)' : 'var(--border)'}`,
             color: liked ? '#ef4444' : 'var(--text-muted)',
             cursor: isConnected && !isWrongNetwork ? 'pointer' : 'not-allowed',
-            transition: 'all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
-            transform: liked ? 'scale(1.05)' : 'scale(1)',
           }}
         >
-          <span style={{ fontSize: 16, transition: 'transform 0.2s' }}>{liked ? '❤️' : '🤍'}</span> 
+          <Heart size={16} fill={liked ? 'currentColor' : 'none'} /> 
           {post.likeCount.toString()}
         </button>
 
@@ -174,12 +191,9 @@ export default function PostCard({
               background: 'rgba(239,68,68,0.05)',
               border: '1px solid rgba(239,68,68,0.15)',
               color: '#ef4444', cursor: 'pointer',
-              transition: 'all 0.2s',
             }}
-            onMouseEnter={e => { e.currentTarget.style.background = 'rgba(239,68,68,0.12)'; e.currentTarget.style.borderColor = 'rgba(239,68,68,0.3)'; }}
-            onMouseLeave={e => { e.currentTarget.style.background = 'rgba(239,68,68,0.05)'; e.currentTarget.style.borderColor = 'rgba(239,68,68,0.15)'; }}
           >
-            <span style={{ fontSize: 16 }}>🗑️</span>
+            <Trash2 size={16} />
           </button>
         )}
 
@@ -187,7 +201,7 @@ export default function PostCard({
           display: 'flex',
           flexDirection: 'column',
           gap: 8,
-          padding: '10px 14px',
+          padding: '12px 16px',
           borderRadius: 16,
           background: 'var(--bg-secondary)',
           border: '1px solid var(--border)',
@@ -195,10 +209,10 @@ export default function PostCard({
           flex: 1,
         }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text)' }}>Support Creator</div>
-            <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-faint)', textTransform: 'uppercase', letterSpacing: 0.5 }}>
+            <div style={{ fontSize: 12, fontWeight: 800, color: 'var(--text)' }}>Support Creator</div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 10, fontWeight: 800, color: 'var(--text-faint)', textTransform: 'uppercase', letterSpacing: 0.5 }}>
               Tip in <OGLogo size={10} />
-            </span>
+            </div>
           </div>
 
           <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
@@ -211,12 +225,12 @@ export default function PostCard({
                   onClick={() => onTipAmountChange(preset)}
                   className="secondary-btn"
                   style={{
-                    padding: '5px 10px',
+                    padding: '5px 12px',
                     borderRadius: 8,
                     fontSize: 11,
                     fontWeight: 700,
-                    background: active ? 'rgba(236,72,153,0.08)' : 'transparent',
-                    borderColor: active ? 'rgba(236,72,153,0.3)' : 'var(--border)',
+                    background: active ? 'rgba(236,72,153,0.08)' : 'var(--bg)',
+                    borderColor: active ? 'rgba(236,72,153,0.4)' : 'var(--border)',
                     color: active ? 'var(--accent)' : 'var(--text-muted)',
                   }}
                 >
@@ -231,8 +245,8 @@ export default function PostCard({
               display: 'flex',
               alignItems: 'center',
               gap: 6,
-              padding: '0 10px',
-              minHeight: 36,
+              padding: '0 12px',
+              minHeight: 38,
               borderRadius: 10,
               background: 'var(--bg)',
               border: '1px solid var(--border)',
@@ -254,19 +268,22 @@ export default function PostCard({
               disabled={!isConnected || isWrongNetwork || isTipping || Number(normalizedTip) <= 0} 
               className="primary-btn" 
               style={{
-                minHeight: 36,
-                padding: '0 14px',
+                minHeight: 38,
+                padding: '0 16px',
                 borderRadius: 10,
                 fontSize: 12,
                 whiteSpace: 'nowrap',
-                background: 'var(--accent)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 6
               }}
             >
-              {isTipping ? 'Sending...' : `Send ${normalizedTip} 0G`}
+              <Zap size={14} fill={isTipping ? 'none' : 'currentColor'} className={isTipping ? 'pulse-dot' : ''} />
+              {isTipping ? 'Processing...' : `Tip ${normalizedTip} 0G`}
             </button>
           </div>
         </div>
-        <span style={{ marginLeft: 'auto', fontSize: 11, color: 'var(--text-faint)', fontFamily: 'monospace' }}>#{post.id.toString()}</span>
+        <span style={{ marginLeft: 'auto', fontSize: 11, color: 'var(--text-faint)', fontFamily: 'monospace', fontWeight: 600 }}>#{post.id.toString()}</span>
       </div>
     </div>
   );
