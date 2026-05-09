@@ -23,10 +23,21 @@ import {
 const ZERO_G_LOGO = "https://pbs.twimg.com/profile_images/2038084529374867456/Oq74BA_I_400x400.jpg";
 
 function timeAgo(timestamp: number | string | undefined): string {
-  if (!timestamp) return 'Just now';
+  if (!timestamp || timestamp === 'just now') return 'Just now';
+  
   const now = Date.now();
-  const past = typeof timestamp === 'number' ? timestamp : new Date(timestamp).getTime();
+  let past: number;
+  
+  if (typeof timestamp === 'number') {
+    past = timestamp;
+  } else {
+    const d = new Date(timestamp);
+    if (isNaN(d.getTime())) return 'Just now';
+    past = d.getTime();
+  }
+
   const diffInSeconds = Math.floor((now - past) / 1000);
+  if (diffInSeconds < 0) return 'Just now'; // Handle future clocks slightly
 
   if (diffInSeconds < 60) return 'Just now';
   if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`;
