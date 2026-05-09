@@ -149,3 +149,42 @@ export function formatFileSize(bytes: number): string {
 export function storageScanUrlForTx(txHash: string) {
   return `${STORAGE_SCAN}/tx/${txHash}`;
 }
+
+export interface PostMetadata {
+  fileName: string;
+  fileType: string;
+  fileSize: number;
+  rootHash: string;
+  txHash: string;
+  timestamp?: number;
+}
+
+export async function getFileUrl(rootHash: string): Promise<string> {
+  try {
+    const { Indexer, StorageNode } = await import('@0gfoundation/0g-storage-ts-sdk');
+    const indexer = new Indexer(INDEXER_RPC);
+    const [nodes, err] = await indexer.selectNodes(rootHash, 1);
+    if (err || !nodes?.length) return '';
+
+    const node = new StorageNode(nodes[0].url);
+    const [fileInfo, infoErr] = await node.getFileInfo(rootHash);
+    if (infoErr || !fileInfo) return '';
+
+    // Handle large files by segments if needed, but for simple URLs we can use the indexer proxy
+    return `https://indexer-storage-turbo.0g.ai/download/${rootHash}`;
+  } catch {
+    return '';
+  }
+}
+
+export async function downloadPostMetadata(metadataRootHash: string): Promise<PostMetadata | null> {
+  if (!metadataRootHash || metadataRootHash.length < 10) return null;
+  try {
+    const response = await fetch(`https://indexer-storage-turbo.0g.ai/download/${metadataRootHash}`);
+    if (!response.ok) return null;
+    return await response.json();
+  } catch (e) {
+    console.error('Failed to download metadata:', e);
+    return null;
+  }
+}
