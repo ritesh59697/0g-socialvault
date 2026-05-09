@@ -302,12 +302,14 @@ export default function LandingView({
                   borderRadius: 'var(--radius-lg)',
                   cursor: 'pointer',
                   transition: 'all 0.4s cubic-bezier(0.2, 0, 0, 1)',
-                  transform: isActive ? 'translateY(-4px)' : 'none',
+                  transform: isActive ? 'translateY(-2px)' : 'none',
                   boxShadow: isActive ? `0 12px 32px ${item.color}18` : 'var(--shadow-xs)',
                   display: 'flex',
                   flexDirection: 'column',
                   position: 'relative',
-                  overflow: 'hidden'
+                  overflow: 'hidden',
+                  // Ensure stable height to prevent layout shifting
+                  minHeight: 180,
                 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14 }}>
                   <span style={{
