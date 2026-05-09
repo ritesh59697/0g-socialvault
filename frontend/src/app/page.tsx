@@ -18,7 +18,9 @@ import LandingView from '@/components/LandingView';
 import { Tab } from '@/lib/types';
 
 
-export default function Home() {
+import { Suspense } from 'react';
+
+function HomeContent() {
   const { address, isConnected, chain } = useAccount();
   const searchParams = useSearchParams();
   const { connect, connectors } = useConnect();
@@ -321,5 +323,17 @@ export default function Home() {
       )}
       {activeTab === 'about' && <div className="app-rail" style={{ paddingTop: 40 }}><AboutView /></div>}
     </AppShell>
+  );
+}
+
+export default function Home() {
+  return (
+    <Suspense fallback={
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', background: '#09090b', color: 'white' }}>
+        <div className="pulse-dot">Loading SocialVault...</div>
+      </div>
+    }>
+      <HomeContent />
+    </Suspense>
   );
 }
