@@ -49,23 +49,14 @@ export async function uploadToZeroG(
 
   try {
     // Dynamically import — keeps them out of the main bundle
-    const [{ Blob: ZgBlob, Indexer }, { ethers }, { default: axios }] =
+    // Using the /browser export which handles HTTPS proxying automatically
+    const [{ Blob: ZgBlob, Indexer }, { ethers }] =
       await Promise.all([
-        import('@0gfoundation/0g-storage-ts-sdk'),
+        import('@0gfoundation/0g-storage-ts-sdk/browser'),
         import('ethers'),
-        import('axios'),
       ]);
 
-    // Setup proxy interceptor for storage nodes (port 5678)
-    axios.interceptors.request.use((config) => {
-      if (config.url && (config.url.includes(':5678') || config.url.includes('34.66.131.173'))) {
-        const targetUrl = config.url.startsWith('http') ? config.url : `http://${config.url}`;
-        config.url = `/api/proxy-0g?url=${encodeURIComponent(targetUrl)}`;
-      }
-      return config;
-    }, (error) => Promise.reject(error));
-
-    // Re-verify Buffer after dynamic imports which might affect global state
+    // Re-verify Buffer after dynamic imports
     ensureBuffer();
 
   onProgress?.('Connecting wallet...');
