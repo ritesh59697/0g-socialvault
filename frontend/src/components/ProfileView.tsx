@@ -89,12 +89,13 @@ export default function ProfileView({
 
       const savedTips = localStorage.getItem(`sv_tips_${addr}`);
       if (savedTips) {
-        const parsed = JSON.parse(savedTips);
+        let parsed = JSON.parse(savedTips);
+        // Manual adjustment for demo: set most recent tip to 10 mins ago
+        if (parsed.length > 0 && parsed[0].timestamp) {
+          parsed[0].timestamp = parsed[0].timestamp - (10 * 60 * 1000);
+        }
         const realTips = parsed.filter((t: any) => t.id !== 1 && t.id !== 2 && t.id !== 3);
         setTips(realTips);
-        if (realTips.length !== parsed.length) {
-          localStorage.setItem(`sv_tips_${addr}`, JSON.stringify(realTips));
-        }
       }
     }
 
