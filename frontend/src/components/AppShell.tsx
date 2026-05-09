@@ -2,11 +2,10 @@
 import { useAccount, useConnect, useDisconnect, useReadContract, useSwitchChain } from 'wagmi';
 import { useEffect, useState } from 'react';
 import { SOCIALVAULT_ABI, SOCIALVAULT_ADDRESS } from '@/lib/contract';
+import { Tab } from '@/lib/types';
 import Sidebar from './Sidebar';
 import Header from './Header';
 import Footer from './Footer';
-
-type Tab = 'home' | 'feed' | 'explore' | 'profile' | 'about';
 
 export default function AppShell({
   children,

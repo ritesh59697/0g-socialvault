@@ -15,7 +15,8 @@ import AboutView from '@/components/AboutView';
 
 import LandingView from '@/components/LandingView';
 
-type Tab = 'home' | 'feed' | 'explore' | 'profile' | 'about';
+import { Tab } from '@/lib/types';
+
 
 export default function Home() {
   const { address, isConnected, chain } = useAccount();

@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 
-type Tab = 'feed' | 'explore' | 'profile' | 'about';
+import { Tab } from '@/lib/types';
+
 
 export default function Sidebar({
   activeTab, setActiveTab, total, isConnected, isWrongNetwork, onSwitchChain, address,
