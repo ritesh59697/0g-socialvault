@@ -17,6 +17,14 @@ export const metadata: Metadata = {
     card: 'summary',
     images: ['/logo.png'],
   },
+  icons: {
+    icon: '/logo.png',
+    apple: '/logo.png',
+  },
+  icons: {
+    icon: '/logo.png',
+    apple: '/logo.png',
+  },
 };
 
 export default async function RootLayout({

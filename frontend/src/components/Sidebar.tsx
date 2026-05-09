@@ -114,7 +114,7 @@ export default function Sidebar({
                 <Link
                   key={t.key}
                   href={t.href}
-                  onClick={() => setActiveTab(t.key)}
+                  onClick={onClose}
                   className={tabClassName}
                   style={{ textDecoration: 'none', ...tabStyle }}
                 >
@@ -124,7 +124,7 @@ export default function Sidebar({
             }
 
             return (
-              <button key={t.key} onClick={() => setActiveTab(t.key)} className={tabClassName} style={tabStyle}>
+              <button key={t.key} onClick={() => { setActiveTab(t.key); onClose(); }} className={tabClassName} style={tabStyle}>
                 {content}
               </button>
             );
