@@ -108,6 +108,18 @@ export async function downloadFromZeroG(rootHash: string): Promise<Blob> {
     throw new Error('Invalid 0G storage root hash.');
   }
 
+  // In production (HTTPS), use our API proxy to avoid Mixed Content blocks
+  // (Browser blocks HTTPS -> HTTP requests to storage nodes)
+  if (typeof window !== 'undefined' && window.location.protocol === 'https:') {
+    try {
+      const resp = await fetch(`/api/proxy?hash=${rootHash}`);
+      if (resp.ok) return await resp.blob();
+      console.warn(`Proxy download failed (${resp.status}), falling back to direct SDK download...`);
+    } catch (e) {
+      console.warn('Proxy download error, falling back to direct SDK download...', e);
+    }
+  }
+
   const { Indexer } = await import('@0gfoundation/0g-storage-ts-sdk');
   const indexer = new Indexer(INDEXER_RPC);
   const [blob, err] = await indexer.downloadToBlob(rootHash, { proof: false });
