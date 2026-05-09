@@ -63,6 +63,7 @@ function HomeContent() {
     address: SOCIALVAULT_ADDRESS, abi: SOCIALVAULT_ABI,
     functionName: 'getFeed', args: [BigInt(0), BigInt(20)],
     query: {
+      enabled: !!SOCIALVAULT_ADDRESS,
       staleTime: 30_000,
       refetchOnWindowFocus: false,
       refetchOnReconnect: false,
