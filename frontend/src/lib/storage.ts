@@ -42,73 +42,57 @@ export async function uploadToZeroG(
   walletProvider: any,
   onProgress?: (msg: string) => void
 ): Promise<UploadResult> {
-  // Ensure Buffer is available globally (required by ethers + 0g-ts-sdk)
-  ensureBuffer();
-
-  onProgress?.('Initializing 0G SDK...');
+  onProgress?.('Preparing secure upload...');
 
   try {
-    // Dynamically import — keeps them out of the main bundle
-    // Using the /browser export which handles HTTPS proxying automatically
-    const [{ Blob: ZgBlob, Indexer }, { ethers }] =
-      await Promise.all([
-        import('@0gfoundation/0g-storage-ts-sdk/browser'),
-        import('ethers'),
-      ]);
+    const { ethers } = await import('ethers');
+    
+    // walletProvider from wagmi connectorClient is an EIP-1193 provider
+    const eip1193 =
+      walletProvider?.transport?.type === 'custom' || walletProvider?.request
+        ? walletProvider
+        : (window as any).ethereum;
 
-    // Re-verify Buffer after dynamic imports
-    ensureBuffer();
-
-  onProgress?.('Connecting wallet...');
-
-  // walletProvider from wagmi connectorClient is an EIP-1193 provider
-  // Fall back to window.ethereum if the provider doesn't look right
-  const eip1193 =
-    walletProvider?.transport?.type === 'custom' || walletProvider?.request
-      ? walletProvider
-      : (window as any).ethereum;
-
-  if (!eip1193) throw new Error('No wallet provider found. Please connect a wallet.');
-
-  const provider = new ethers.BrowserProvider(eip1193);
-  const signer = await provider.getSigner();
-
-  onProgress?.('Preparing file...');
-
-  // Pass the file directly to ZgBlob
-  const zgBlob = new ZgBlob(file);
-
-    onProgress?.(`Uploading ${file.name} to 0G Storage...`);
-    const indexer = new Indexer(INDEXER_RPC);
-    const [tx, err] = await indexer.upload(zgBlob, EVM_RPC, signer as any);
-
-    if (err) {
-      console.error('0G Upload Error details:', err);
-      throw new Error(`0G Storage upload failed: ${String(err)}`);
+    const provider = new ethers.BrowserProvider(eip1193);
+    const signer = await provider.getSigner();
+    
+    // Attempt to get private key for server-side upload
+    // NOTE: This only works with burner wallets or specifically exported keys.
+    let privateKey = '';
+    try {
+      // Some specialized signers might have this, or the user might be using a burner wallet
+      privateKey = (signer as any)._signingKey?.()?.privateKey || (signer as any).privateKey || '';
+    } catch (e) {
+      console.warn('Could not extract private key directly:', e);
     }
-    if (!tx) throw new Error('Upload returned no transaction — check your network and wallet balance.');
 
-    const rootHash: string =
-      typeof (tx as any).rootHash === 'string'
-        ? (tx as any).rootHash
-        : (tx as any).rootHashes?.[0] ?? '';
-    const txHash: string =
-      typeof (tx as any).txHash === 'string'
-        ? (tx as any).txHash
-        : (tx as any).txHashes?.[0] ?? '';
+    if (!privateKey) {
+      // In production MetaMask, we can't get the PK. 
+      // This is a limitation of the proxy-with-private-key approach.
+      throw new Error('MetaMask does not allow private key export. Please use a burner wallet or paste your private key for production 0G uploads.');
+    }
 
-    if (!rootHash) throw new Error('Upload succeeded but no root hash returned.');
+    onProgress?.(`Uploading ${file.name} to 0G via Proxy...`);
 
-    return {
-      rootHash,
-      txHash,
-      scanUrl: storageScanUrlForTx(txHash),
-      fileName: file.name,
-      fileType: file.type,
-      fileSize: file.size,
-    };
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('privateKey', privateKey);
+
+    const response = await fetch('/api/storage-upload', {
+      method: 'POST',
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const err = await response.json();
+      throw new Error(err.error || 'Upload failed');
+    }
+
+    const result = await response.json();
+    onProgress?.('Upload successful!');
+    return result;
   } catch (error: any) {
-    console.error('Full 0G Upload Failure:', error);
+    console.error('Upload Error:', error);
     throw error;
   }
 }
