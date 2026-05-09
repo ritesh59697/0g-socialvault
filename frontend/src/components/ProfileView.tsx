@@ -91,13 +91,23 @@ export default function ProfileView({
       if (savedTips) {
         let parsed = JSON.parse(savedTips);
         // Target specific 0.05 0G transaction for demo
+        let changed = false;
         parsed = parsed.map((t: any) => {
           if (t.amount === '0.05' || t.amount === 0.05) {
-            // Set to 25 mins ago (25 * 60 * 1000 = 1500000ms)
-            return { ...t, timestamp: Date.now() - 1500000 };
+            // Only adjust if it's "too new" (less than 1 minute old)
+            const age = Date.now() - (t.timestamp || 0);
+            if (age < 60000) {
+              changed = true;
+              return { ...t, timestamp: Date.now() - 1500000 };
+            }
           }
           return t;
         });
+        
+        if (changed) {
+          localStorage.setItem(`sv_tips_${addr}`, JSON.stringify(parsed));
+        }
+
         const realTips = parsed.filter((t: any) => t.id !== 1 && t.id !== 2 && t.id !== 3);
         setTips(realTips);
       }
