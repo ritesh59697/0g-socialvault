@@ -23,22 +23,35 @@ export interface PostMetadata {
   createdAt?: string;
 }
 
-// ── Patch fetch so HTTP storage-node calls go through our HTTPS proxy ──────
-let _fetchPatched = false;
-function patchFetchForProxy() {
-  if (typeof window === 'undefined' || _fetchPatched) return;
-  _fetchPatched = true;
-  const _orig = window.fetch.bind(window);
+// ── Patch fetch & XHR so HTTP storage-node calls go through our HTTPS proxy ──────
+let _patched = false;
+function patchNetworkForProxy() {
+  if (typeof window === 'undefined' || _patched) return;
+  _patched = true;
+
+  // 1. Patch Fetch
+  const _origFetch = window.fetch.bind(window);
   window.fetch = ((input: RequestInfo | URL, init?: RequestInit) => {
     const url =
       typeof input === 'string' ? input
         : input instanceof URL ? input.toString()
           : (input as Request).url;
     if (url.startsWith('http://') && /\d+\.\d+\.\d+\.\d+:\d+/.test(url)) {
-      return _orig(`/api/storage-proxy?url=${encodeURIComponent(url)}`, init);
+      return _origFetch(`/api/storage-proxy?url=${encodeURIComponent(url)}`, init);
     }
-    return _orig(input, init);
+    return _origFetch(input, init);
   }) as typeof window.fetch;
+
+  // 2. Patch XMLHttpRequest (for Axios used by 0G SDK)
+  const _origOpen = XMLHttpRequest.prototype.open;
+  XMLHttpRequest.prototype.open = function(method: string, url: string | URL, ...args: any[]) {
+    const urlStr = typeof url === 'string' ? url : url.toString();
+    if (urlStr.startsWith('http://') && /\d+\.\d+\.\d+\.\d+:\d+/.test(urlStr)) {
+      const proxyUrl = `/api/storage-proxy?url=${encodeURIComponent(urlStr)}`;
+      return _origOpen.apply(this, [method, proxyUrl, ...args] as any);
+    }
+    return _origOpen.apply(this, [method, url, ...args] as any);
+  } as any;
 }
 
 // ── Upload a file to 0G Storage ────────────────────────────────────────────
@@ -47,7 +60,7 @@ export async function uploadToZeroG(
   walletProvider: unknown,
   onProgress?: (msg: string) => void,
 ): Promise<UploadResult> {
-  patchFetchForProxy();
+  patchNetworkForProxy();
 
   onProgress?.('Loading 0G SDK...');
   const [{ Blob: ZgBlob, Indexer }, { ethers }] = await Promise.all([
@@ -88,7 +101,7 @@ export async function uploadToZeroG(
 export async function downloadFromZeroG(rootHash: string): Promise<Blob> {
   if (!rootHash || rootHash.length < 10) throw new Error('Invalid root hash');
   
-  patchFetchForProxy();
+  patchNetworkForProxy();
   
   // @ts-ignore
   const { Indexer } = await import('@0gfoundation/0g-storage-ts-sdk/browser');
