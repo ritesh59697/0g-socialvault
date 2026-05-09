@@ -26,7 +26,9 @@ import {
   Search,
   ShieldCheck,
   Zap,
-  Globe
+  Globe,
+  X,
+  CheckCircle2
 } from 'lucide-react';
 
 function HomeContent() {
@@ -180,20 +182,56 @@ function HomeContent() {
         const tipRecord = { 
           from: address?.slice(0, 6) + '...' + address?.slice(-4), 
           amount: amount, 
-          time: 'just now', 
+          timestamp: Date.now(), 
           id: Date.now() 
         };
         const existing = JSON.parse(localStorage.getItem(`sv_tips_${addr}`) || '[]');
         localStorage.setItem(`sv_tips_${addr}`, JSON.stringify([tipRecord, ...existing]));
       }
 
+      setStatus('Tip sent successfully! Transaction completed.');
+      setStatusType('success');
+      setTimeout(() => setStatus(''), 5000);
+
       setTimeout(() => refreshFeed(false), 2500);
-    } catch (e: any) { console.error(e); }
+    } catch (e: any) { 
+      console.error(e);
+      setStatus(e.message?.slice(0, 100) || 'Tip failed');
+      setStatusType('error');
+      setTimeout(() => setStatus(''), 5000);
+    }
     finally { setTippingPostId(null); }
   }
 
   return (
     <AppShell activeTab={activeTab} setActiveTab={setActiveTab}>
+      {/* Global Notification Toast */}
+      {status && (statusType === 'success' || statusType === 'error') && (
+        <div className="fade-up" style={{
+          position: 'fixed', top: 24, left: '50%', transform: 'translateX(-50%)',
+          zIndex: 9999, minWidth: 320, maxWidth: '90vw'
+        }}>
+          <div className="glass-panel" style={{
+            padding: '16px 24px', 
+            display: 'flex', alignItems: 'center', gap: 12,
+            background: statusType === 'success' ? 'rgba(16,185,129,0.95)' : 'rgba(239,68,68,0.95)',
+            border: `1px solid ${statusType === 'success' ? 'rgba(16,185,129,0.2)' : 'rgba(239,68,68,0.2)'}`,
+            color: '#fff',
+            boxShadow: '0 20px 40px rgba(0,0,0,0.2)',
+            backdropFilter: 'blur(20px)'
+          }}>
+            {statusType === 'success' ? <CheckCircle2 size={20} /> : <AlertCircle size={20} />}
+            <div style={{ fontWeight: 700, fontSize: 14 }}>{status}</div>
+            <button onClick={() => setStatus('')} style={{ 
+              marginLeft: 'auto', background: 'none', border: 'none', color: '#fff', 
+              opacity: 0.6, cursor: 'pointer', padding: 4 
+            }}>
+              <X size={16} />
+            </button>
+          </div>
+        </div>
+      )}
+
       {activeTab === 'home' && (
         <LandingView 
           onNavigate={setActiveTab} 

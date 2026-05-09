@@ -22,6 +22,19 @@ import {
 
 const ZERO_G_LOGO = "https://pbs.twimg.com/profile_images/2038084529374867456/Oq74BA_I_400x400.jpg";
 
+function timeAgo(timestamp: number | string | undefined): string {
+  if (!timestamp) return 'Just now';
+  const now = Date.now();
+  const past = typeof timestamp === 'number' ? timestamp : new Date(timestamp).getTime();
+  const diffInSeconds = Math.floor((now - past) / 1000);
+
+  if (diffInSeconds < 60) return 'Just now';
+  if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`;
+  if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`;
+  if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)}d ago`;
+  return new Date(past).toLocaleDateString();
+}
+
 export default function ProfileView({
   address, isConnected, posts, onConnect, isOwnProfile = true, connectedAddress,
   onLike, onTip, isTipping, tipAmounts, setTipAmounts, likedPosts, isWrongNetwork
@@ -402,7 +415,7 @@ export default function ProfileView({
                       <tr key={tip.id} style={{ borderBottom: '1px solid var(--border-subtle)' }}>
                         <td style={{ padding: '16px 20px', fontWeight: 700, color: 'var(--accent)' }}>{tip.from}</td>
                         <td style={{ padding: '16px 20px', fontWeight: 800, color: 'var(--text)' }}>{tip.amount} 0G</td>
-                        <td style={{ padding: '16px 20px', color: 'var(--text-muted)', fontWeight: 500 }}>{tip.time}</td>
+                        <td style={{ padding: '16px 20px', color: 'var(--text-muted)', fontWeight: 500 }}>{timeAgo(tip.timestamp || tip.time)}</td>
                         <td style={{ padding: '16px 20px', textAlign: 'right' }}>
                           <span style={{ fontSize: 11, padding: '4px 12px', background: 'rgba(16,185,129,0.1)', color: 'var(--success)', borderRadius: 20, fontWeight: 800 }}>COMPLETED</span>
                         </td>
