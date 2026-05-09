@@ -53,16 +53,40 @@ export default function Header({
           {getPageTitle()}
         </h1>
 
-        <div className="mobile-only" style={{ width: 40 }} /> {/* Spacer to keep title centered */}
+        <button 
+          onClick={onToggleTheme} 
+          className="secondary-btn mobile-only" 
+          style={{ 
+            width: 40, height: 40, borderRadius: 10, padding: 0, 
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            background: 'transparent', border: 'none'
+          }}
+        >
+          {theme === 'dark' ? (
+            <Sun size={20} strokeWidth={2.5} color="#fbbf24" />
+          ) : (
+            <Moon size={20} strokeWidth={2.5} color="#ec4899" />
+          )}
+        </button>
         
         <div className="header-actions desktop-only">
-          <button onClick={onToggleTheme} className="secondary-btn" style={{
-            width: 38, height: 38, borderRadius: 12,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            background: 'var(--bg-secondary)',
-            border: '1px solid var(--border)'
-          }}>
-            {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
+          <button 
+            onClick={onToggleTheme} 
+            className="secondary-btn" 
+            style={{
+              width: 40, height: 40, borderRadius: 12,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              background: 'var(--bg-secondary)',
+              border: '1px solid var(--border)',
+              cursor: 'pointer',
+              color: 'var(--accent)'
+            }}
+          >
+            {theme === 'dark' ? (
+              <Sun size={20} strokeWidth={2.5} color="#fbbf24" />
+            ) : (
+              <Moon size={20} strokeWidth={2.5} color="#ec4899" />
+            )}
           </button>
 
           <div className="glass-panel" style={{
