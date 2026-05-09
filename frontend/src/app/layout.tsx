@@ -32,9 +32,6 @@ export default async function RootLayout({
   const initialState = cookieToInitialState(wagmiConfig, cookie);
   return (
     <html lang="en" suppressHydrationWarning>
-      <head>
-        <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests" />
-      </head>
       <body suppressHydrationWarning>
         <Providers initialState={initialState}>{children}</Providers>
       </body>
