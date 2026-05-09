@@ -3,6 +3,7 @@ import { headers } from 'next/headers';
 import { cookieToInitialState } from 'wagmi';
 import { wagmiConfig } from '@/lib/wagmi';
 import { Providers } from './providers';
+import LayoutWrapper from '@/components/LayoutWrapper';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -33,7 +34,11 @@ export default async function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body suppressHydrationWarning>
-        <Providers initialState={initialState}>{children}</Providers>
+        <Providers initialState={initialState}>
+          <LayoutWrapper>
+            {children}
+          </LayoutWrapper>
+        </Providers>
       </body>
     </html>
   );

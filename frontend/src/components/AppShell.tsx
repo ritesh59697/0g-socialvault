@@ -1,6 +1,7 @@
 'use client';
 import { useAccount, useConnect, useDisconnect, useReadContract, useSwitchChain } from 'wagmi';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
+import { usePathname, useSearchParams } from 'next/navigation';
 import { SOCIALVAULT_ABI, SOCIALVAULT_ADDRESS } from '@/lib/contract';
 import { Tab } from '@/lib/types';
 import Sidebar from './Sidebar';
@@ -8,13 +9,9 @@ import Header from './Header';
 import Footer from './Footer';
 
 export default function AppShell({
-  children,
-  activeTab,
-  setActiveTab,
+  children
 }: {
   children: React.ReactNode;
-  activeTab: Tab;
-  setActiveTab?: (t: Tab) => void;
 }) {
   const { address, isConnected, chain } = useAccount();
   const { connect, connectors } = useConnect();
@@ -22,6 +19,18 @@ export default function AppShell({
   const { switchChain } = useSwitchChain();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [theme, setTheme] = useState<'dark' | 'light'>('light');
+
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  // Detect active tab from URL for persistent layout smoothness
+  const effectiveTab = useMemo(() => {
+    if (pathname.startsWith('/profile/')) return 'profile';
+    if (pathname === '/about') return 'about';
+    const tab = searchParams.get('tab');
+    if (tab && ['home', 'feed', 'explore', 'profile', 'about'].includes(tab)) return tab as Tab;
+    return 'home';
+  }, [pathname, searchParams]);
 
   useEffect(() => {
     if (isConnected && chain?.id !== 16661) switchChain({ chainId: 16661 });
@@ -36,18 +45,6 @@ export default function AppShell({
       document.documentElement.setAttribute('data-theme', 'light');
     }
   }, []);
-
-  const [effectiveTab, setEffectiveTab] = useState<Tab>(activeTab);
-
-  useEffect(() => {
-    const currentPath = window.location.pathname;
-    if (currentPath.startsWith('/profile/')) {
-      const isMyProfile = address && currentPath.toLowerCase().includes(address.toLowerCase());
-      setEffectiveTab(isMyProfile ? 'profile' : 'explore');
-    } else {
-      setEffectiveTab(activeTab);
-    }
-  }, [activeTab, address]);
 
   const toggleTheme = () => {
     const next = theme === 'dark' ? 'light' : 'dark';
@@ -74,11 +71,8 @@ export default function AppShell({
     }
   };
 
-  const handleTabChange = (t: Tab) => {
-    if (setActiveTab) {
-      setActiveTab(t);
-      setIsSidebarOpen(false); // Close sidebar on mobile after selection
-    }
+  const handleTabChange = () => {
+    setIsSidebarOpen(false); // Close sidebar on mobile after selection
   };
 
   return (

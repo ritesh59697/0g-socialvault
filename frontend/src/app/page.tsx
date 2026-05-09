@@ -1,12 +1,11 @@
 'use client';
-import { useAccount, useConnect, useDisconnect, useReadContract, useWriteContract, useSwitchChain } from 'wagmi';
+import { useAccount, useConnect, useReadContract, useWriteContract, useSwitchChain } from 'wagmi';
 import { useState, useEffect, useRef } from 'react';
 import { parseEther } from 'viem';
 import { useSearchParams } from 'next/navigation';
 import { SOCIALVAULT_ABI, SOCIALVAULT_ADDRESS } from '@/lib/contract';
 import { uploadToZeroG, getMediaType } from '@/lib/storage';
 import { useConnectorClient } from 'wagmi';
-import AppShell from '@/components/AppShell';
 import CreatePost from '@/components/CreatePost';
 import PostCard from '@/components/PostCard';
 import ExploreView from '@/components/ExploreView';
@@ -14,28 +13,22 @@ import ProfileView from '@/components/ProfileView';
 import AboutView from '@/components/AboutView';
 import LandingView from '@/components/LandingView';
 import { Tab } from '@/lib/types';
-import { Suspense } from 'react';
 import { 
   RefreshCw, 
   Loader2, 
   Sparkles, 
   User, 
-  Wallet,
   AlertCircle,
-  Database,
-  Search,
-  ShieldCheck,
   Zap,
   Globe,
   X,
   CheckCircle2
 } from 'lucide-react';
 
-function HomeContent() {
+export default function Home() {
   const { address, isConnected, chain } = useAccount();
   const searchParams = useSearchParams();
   const { connect, connectors } = useConnect();
-  const { disconnect } = useDisconnect();
   const { writeContractAsync } = useWriteContract();
   const { switchChain } = useSwitchChain();
   const { data: connectorClient } = useConnectorClient();
@@ -88,10 +81,12 @@ function HomeContent() {
       return a.id > b.id ? -1 : 1;
     });
 
-  const total = feedData?.[1] || BigInt(0);
   const isWrongNetwork = isConnected && chain?.id !== 16661;
   const doSwitch = () => switchChain({ chainId: 16661 });
-  const doConnect = () => connect({ connector: connectors[0] });
+  const doConnect = () => {
+    const injected = connectors.find(c => c.id === 'injected');
+    connect({ connector: injected || connectors[0] });
+  };
 
   async function refreshFeed(showLoader = true) {
     if (showLoader) setRefreshingFeed(true);
@@ -204,7 +199,7 @@ function HomeContent() {
   }
 
   return (
-    <AppShell activeTab={activeTab} setActiveTab={setActiveTab}>
+    <div className="tab-container">
       {/* Global Notification Toast */}
       {status && (statusType === 'success' || statusType === 'error') && (
         <div className="fade-up" style={{
@@ -367,21 +362,6 @@ function HomeContent() {
         </div>
       )}
       {activeTab === 'about' && <div className="app-rail" style={{ paddingTop: 40 }}><AboutView /></div>}
-    </AppShell>
-  );
-}
-
-export default function Home() {
-  return (
-    <Suspense fallback={
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', background: '#09090b', color: 'white' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <Loader2 className="animate-spin" size={24} style={{ color: 'var(--accent)' }} />
-          <div style={{ fontSize: 14, fontWeight: 800, letterSpacing: 1, textTransform: 'uppercase' }}>SocialVault</div>
-        </div>
-      </div>
-    }>
-      <HomeContent />
-    </Suspense>
+    </div>
   );
 }
