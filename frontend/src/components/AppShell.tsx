@@ -37,11 +37,17 @@ export default function AppShell({
     }
   }, []);
 
-  // Sync active tab with URL path if on a dedicated profile page
-  const currentPath = typeof window !== 'undefined' ? window.location.pathname : '';
-  const effectiveTab = currentPath.startsWith('/profile/') 
-    ? (address && currentPath.includes(address.toLowerCase()) ? 'profile' : 'explore')
-    : activeTab;
+  const [effectiveTab, setEffectiveTab] = useState<Tab>(activeTab);
+
+  useEffect(() => {
+    const currentPath = window.location.pathname;
+    if (currentPath.startsWith('/profile/')) {
+      const isMyProfile = address && currentPath.toLowerCase().includes(address.toLowerCase());
+      setEffectiveTab(isMyProfile ? 'profile' : 'explore');
+    } else {
+      setEffectiveTab(activeTab);
+    }
+  }, [activeTab, address]);
 
   const toggleTheme = () => {
     const next = theme === 'dark' ? 'light' : 'dark';
