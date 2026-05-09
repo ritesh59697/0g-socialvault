@@ -44,7 +44,7 @@ function patchNetworkForProxy() {
 
   // 2. Patch XMLHttpRequest (for Axios used by 0G SDK)
   const _origOpen = XMLHttpRequest.prototype.open;
-  XMLHttpRequest.prototype.open = function(method: string, url: string | URL, ...args: any[]) {
+  XMLHttpRequest.prototype.open = function(this: XMLHttpRequest, method: string, url: string | URL, ...args: any[]) {
     const urlStr = typeof url === 'string' ? url : url.toString();
     if (urlStr.startsWith('http://') && /\d+\.\d+\.\d+\.\d+:\d+/.test(urlStr)) {
       const proxyUrl = `/api/storage-proxy?url=${encodeURIComponent(urlStr)}`;
