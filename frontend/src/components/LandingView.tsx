@@ -279,7 +279,13 @@ export default function LandingView({
           </h2>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 16 }}>
+        <div style={{ 
+          display: 'grid', 
+          gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', 
+          gap: 16,
+          // Help prevent layout shifts during cycle
+          alignItems: 'start'
+        }}>
           {[
             { step: '01', icon: <Wallet size={20} />, title: 'Connect Your Wallet', desc: 'Use MetaMask or Rabby. The app auto-switches to 0G Mainnet (ChainID 16661).', color: '#8b5cf6' },
             { step: '02', icon: <PenLine size={20} />, title: 'Create Your Post', desc: 'Write text or attach media (images or video, up to 50 MB).', color: '#06b6d4' },
@@ -296,9 +302,14 @@ export default function LandingView({
                   border: `1px solid ${isActive ? item.color + '33' : 'var(--border)'}`,
                   borderRadius: 'var(--radius-lg)',
                   cursor: 'pointer',
-                  transition: 'all 0.3s cubic-bezier(0.4,0,0.2,1)',
-                  transform: isActive ? 'translateY(-3px)' : 'none',
-                  boxShadow: isActive ? `0 12px 32px ${item.color}18` : 'var(--shadow-xs)',
+                  transition: 'all 0.4s cubic-bezier(0.4,0,0.2,1)',
+                  // Reduced transform on mobile to prevent flickering
+                  transform: isActive ? 'translateY(-2px)' : 'none',
+                  boxShadow: isActive ? `0 12px 32px ${item.color}12` : 'var(--shadow-xs)',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  // Ensure hardware acceleration
+                  willChange: 'transform, background-color, border-color'
                 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
                   <span style={{
@@ -313,10 +324,12 @@ export default function LandingView({
                 </div>
                 <div style={{
                   fontSize: 12, color: 'var(--text-faint)', lineHeight: 1.6,
-                  maxHeight: isActive ? 120 : 0,
+                  maxHeight: isActive ? 150 : 0,
                   overflow: 'hidden',
-                  transition: 'max-height 0.35s ease, opacity 0.25s ease',
+                  transition: 'max-height 0.5s ease, opacity 0.4s ease',
                   opacity: isActive ? 1 : 0,
+                  // Help mobile browsers optimize the transition
+                  willChange: 'max-height, opacity'
                 }}>
                   {item.desc}
                 </div>
