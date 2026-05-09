@@ -44,7 +44,7 @@ export async function uploadToZeroG(
   // Dynamically import — keeps them out of the main bundle
   const [{ Blob: ZgBlob, Indexer }, { ethers }, bufferMod] =
     await Promise.all([
-      import('@0gfoundation/0g-ts-sdk'),
+      import('@0gfoundation/0g-storage-ts-sdk'),
       import('ethers'),
       import('buffer'),
     ]);
@@ -108,7 +108,7 @@ export async function downloadFromZeroG(rootHash: string): Promise<Blob> {
     throw new Error('Invalid 0G storage root hash.');
   }
 
-  const { Indexer } = await import('@0gfoundation/0g-ts-sdk');
+  const { Indexer } = await import('@0gfoundation/0g-storage-ts-sdk');
   const indexer = new Indexer(INDEXER_RPC);
   const [blob, err] = await indexer.downloadToBlob(rootHash, { proof: false });
 
