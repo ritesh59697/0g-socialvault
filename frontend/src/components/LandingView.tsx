@@ -6,12 +6,14 @@ import {
   Rocket, BarChart3, Globe, Layers, Cpu
 } from 'lucide-react';
 
+import { Tab } from '@/lib/types';
+
 const ZERO_G_LOGO = "https://pbs.twimg.com/profile_images/2038084529374867456/Oq74BA_I_400x400.jpg";
 
 export default function LandingView({
   onNavigate, onConnect, isConnected, address
 }: {
-  onNavigate: (tab: any) => void;
+  onNavigate: (tab: Tab) => void;
   onConnect: () => void;
   isConnected: boolean;
   address?: string;
@@ -381,7 +383,7 @@ export default function LandingView({
 
           <div style={{ position: 'relative', zIndex: 1 }}>
             <div style={{
-              display: 'inline-block', fontSize: 11, padding: '4px 14px', borderRadius: 999,
+              fontSize: 11, padding: '4px 14px', borderRadius: 999,
               background: 'rgba(109,67,242,0.15)', border: '1px solid rgba(109,67,242,0.3)',
               color: 'var(--accent)', fontWeight: 800, letterSpacing: '0.08em',
               textTransform: 'uppercase', marginBottom: 20,
