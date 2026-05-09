@@ -3,9 +3,9 @@ import { SOCIALVAULT_ADDRESS } from '@/lib/contract';
 
 export default function Footer() {
   return (
-    <footer style={{ 
-      marginTop: 'auto', 
-      padding: '48px 24px', 
+    <footer style={{
+      marginTop: 'auto',
+      padding: '48px 24px',
       borderTop: '1px solid var(--border)',
       background: 'var(--bg)',
       textAlign: 'center'
@@ -17,13 +17,13 @@ export default function Footer() {
         }}>
           Built for <span style={{ color: 'var(--accent)', fontWeight: 800 }}>0G APAC Hackathon</span>
         </div>
-        
+
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12 }}>
           <a
             href="https://x.com/Ritesh5969"
             target="_blank"
             rel="noopener noreferrer"
-            style={{ 
+            style={{
               display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none',
               padding: '8px 16px', borderRadius: 20, background: 'var(--bg-secondary)',
               border: '1px solid var(--border)', transition: 'all 0.2s'
@@ -43,7 +43,7 @@ export default function Footer() {
         </div>
 
         <div style={{ marginTop: 24, fontSize: 11, color: 'var(--text-faint)' }}>
-          © 2024 SocialVault • Secured by 0G Network
+          © 2026 SocialVault • Secured by 0G Network
         </div>
       </div>
     </footer>

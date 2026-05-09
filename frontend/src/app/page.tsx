@@ -66,11 +66,32 @@ export default function Home() {
     },
   });
 
+  const [deletedPosts, setDeletedPosts] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    const saved = localStorage.getItem('sv_deleted_posts');
+    if (saved) setDeletedPosts(new Set(JSON.parse(saved)));
+  }, []);
+
+  const saveDeleted = (newSet: Set<string>) => {
+    setDeletedPosts(newSet);
+    localStorage.setItem('sv_deleted_posts', JSON.stringify(Array.from(newSet)));
+  };
+
+  async function handleDelete(postId: bigint) {
+    if (!confirm('Are you sure you want to delete this post? This will remove it from your feed.')) return;
+    saveDeleted(new Set([...deletedPosts, postId.toString()]));
+    // Note: Add on-chain delete call here when contract supports it
+  }
+
   const posts = feedData?.[0] || [];
-  const orderedPosts = [...posts].sort((a: any, b: any) => {
-    if (a.id === b.id) return 0;
-    return a.id > b.id ? -1 : 1;
-  });
+  const orderedPosts = [...posts]
+    .filter((p: any) => !deletedPosts.has(p.id.toString()))
+    .sort((a: any, b: any) => {
+      if (a.id === b.id) return 0;
+      return a.id > b.id ? -1 : 1;
+    });
+
   const total = feedData?.[1] || BigInt(0);
   const isWrongNetwork = isConnected && chain?.id !== 16661;
   const doSwitch = () => switchChain({ chainId: 16661 });
@@ -90,8 +111,14 @@ export default function Home() {
   function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
     const f = e.target.files?.[0];
     if (!f) return;
-    if (f.size > 50 * 1024 * 1024) { setStatus('❌ File too large. Max 50MB.'); setStatusType('error'); return; }
+    if (f.size > 50 * 1024 * 1024) { 
+      setStatus('❌ File too large. Max 50MB.'); 
+      setStatusType('error'); 
+      setTimeout(() => setStatus(''), 5000); // Clear error after 5s
+      return; 
+    }
     setFile(f); setPreview(URL.createObjectURL(f)); setStorageProof(null);
+    setStatus(''); // Clear any previous errors if a valid file is selected
   }
   function removeFile() {
     setFile(null); setPreview(''); setStorageProof(null);
@@ -183,7 +210,7 @@ export default function Home() {
         />
       )}
       {activeTab === 'feed' && (
-        <div className="tab-panel">
+        <div className="tab-panel app-rail" style={{ paddingTop: 40 }}>
           {isConnected ? (
             <CreatePost address={address!} uploading={uploading} status={status} statusType={statusType}
               storageProof={storageProof} onPost={handlePost} onFileSelect={handleFileSelect}
@@ -265,30 +292,32 @@ export default function Home() {
                   tipAmount={tipAmounts[post.id.toString()] || '0.01'}
                   isTipping={tippingPostId === post.id.toString()}
                   onLike={() => handleLike(post.id)} onTip={() => handleTip(post.id)}
+                  onDelete={() => handleDelete(post.id)}
+                  isOwner={address?.toLowerCase() === post.author.toLowerCase()}
                   onTipAmountChange={v => setTipAmounts(p => ({ ...p, [post.id.toString()]: v }))} />
               ))}
             </div>
           )}
         </div>
       )}
-      {activeTab === 'explore' && <ExploreView />}
-      {activeTab === 'profile' && (
-        <ProfileView
-          address={address}
-          isConnected={isConnected}
-          posts={orderedPosts}
-          onConnect={doConnect}
-          connectedAddress={address}
-          onLike={handleLike}
-          onTip={handleTip}
-          isTipping={!!tippingPostId}
-          tipAmounts={tipAmounts}
-          setTipAmounts={setTipAmounts}
-          likedPosts={likedPosts}
-          isWrongNetwork={isWrongNetwork}
-        />
+      {activeTab === 'explore' && <div className="app-rail" style={{ paddingTop: 40 }}><ExploreView /></div>}
+      {activeTab === 'profile' && address && (
+        <div className="app-rail" style={{ paddingTop: 40 }}>
+          <ProfileView 
+            address={address} 
+            posts={orderedPosts}
+            isConnected={isConnected}
+            connectedAddress={address}
+            onLike={handleLike}
+            onTip={handleTip}
+            likedPosts={likedPosts}
+            tipAmounts={tipAmounts}
+            setTipAmounts={setTipAmounts}
+            isWrongNetwork={!!isWrongNetwork}
+          />
+        </div>
       )}
-      {activeTab === 'about' && <AboutView />}
+      {activeTab === 'about' && <div className="app-rail" style={{ paddingTop: 40 }}><AboutView /></div>}
     </AppShell>
   );
 }

@@ -38,6 +38,12 @@ export default function AppShell({
     }
   }, []);
 
+  // Sync active tab with URL path if on a dedicated profile page
+  const currentPath = typeof window !== 'undefined' ? window.location.pathname : '';
+  const effectiveTab = currentPath.startsWith('/profile/') 
+    ? (address && currentPath.includes(address.toLowerCase()) ? 'profile' : 'explore')
+    : activeTab;
+
   const toggleTheme = () => {
     const next = theme === 'dark' ? 'light' : 'dark';
     setTheme(next);
@@ -72,7 +78,7 @@ export default function AppShell({
   return (
     <div className="app-shell">
       <Sidebar 
-        activeTab={activeTab} 
+        activeTab={effectiveTab} 
         setActiveTab={handleTabChange} 
         total={total} 
         isConnected={isConnected} 
@@ -89,7 +95,7 @@ export default function AppShell({
 
       <div className="app-scroll">
         <Header 
-          activeTab={activeTab} 
+          activeTab={effectiveTab} 
           address={address} 
           isConnected={isConnected} 
           isWrongNetwork={!!isWrongNetwork} 
@@ -100,7 +106,7 @@ export default function AppShell({
           onToggleTheme={toggleTheme}
         />
 
-        <main className="app-rail app-main">
+        <main className="app-main">
           {children}
         </main>
 

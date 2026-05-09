@@ -2,6 +2,8 @@
 import { useState, useEffect } from 'react';
 import ProfileAvatar from './ProfileAvatar';
 
+const ZERO_G_LOGO = "https://pbs.twimg.com/profile_images/2038084529374867456/Oq74BA_I_400x400.jpg";
+
 export default function LandingView({ 
   onNavigate, onConnect, isConnected, address 
 }: { 
@@ -20,33 +22,33 @@ export default function LandingView({
   ];
 
   return (
-    <div className="fade-up" style={{ paddingBottom: 60, position: 'relative', overflowX: 'hidden' }}>
-      {/* Immersive Background Orbs (Full Bleed) */}
+    <div className="fade-up" style={{ paddingTop: 80, paddingBottom: 100, position: 'relative', overflowX: 'hidden', minHeight: '100vh', background: 'var(--bg)' }}>
+      {/* Immersive Background Atmosphere (Seamless & Full Width) */}
       <div style={{ 
-        position: 'absolute', top: -100, left: '50%', transform: 'translateX(-50%)',
-        width: '120vw', height: '600px', 
-        background: 'radial-gradient(circle at 50% 30%, rgba(236, 72, 153, 0.08) 0%, transparent 70%)',
+        position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
+        background: `
+          radial-gradient(circle at 50% 0%, var(--accent-glow) 0%, transparent 90%),
+          radial-gradient(circle at 80% 20%, rgba(139, 92, 246, 0.05) 0%, transparent 80%),
+          radial-gradient(circle at 20% 80%, rgba(236, 72, 153, 0.04) 0%, transparent 80%)
+        `,
         zIndex: 0, pointerEvents: 'none'
       }} />
       
       {/* Hero Section */}
       <section style={{
         position: 'relative',
-        padding: '120px 24px 80px',
+        padding: '100px 24px 120px',
         textAlign: 'center',
         zIndex: 1
       }}>
-        {/* Floating Decorative Mesh */}
-        <div style={{ position: 'absolute', top: '0%', left: '10%', width: 300, height: 300, background: 'var(--accent-glow)', filter: 'blur(120px)', opacity: 0.4, zIndex: 0 }} />
-        <div style={{ position: 'absolute', top: '20%', right: '10%', width: 250, height: 250, background: 'var(--accent2-glow)', filter: 'blur(100px)', opacity: 0.3, zIndex: 0 }} />
-
         <div style={{ position: 'relative', zIndex: 1, maxWidth: 900, margin: '0 auto' }}>
           <div style={{ 
-            display: 'inline-flex', alignItems: 'center', gap: 8, padding: '6px 14px', 
-            borderRadius: 20, fontSize: 11, fontWeight: 800, color: 'var(--accent)',
-            marginBottom: 32, background: 'var(--accent-glow)', textTransform: 'uppercase', letterSpacing: 1.5
+            display: 'inline-flex', alignItems: 'center', gap: 10, padding: '8px 18px', 
+            borderRadius: 30, fontSize: 11, fontWeight: 800, color: 'var(--accent)',
+            marginBottom: 32, background: 'var(--accent-glow)', textTransform: 'uppercase', 
+            letterSpacing: 1.5, border: '1px solid var(--accent-glow)'
           }}>
-            <span style={{ fontSize: 14 }}>🌐</span> 0G Native SocialFi
+            <img src={ZERO_G_LOGO} alt="0G" style={{ width: 18, height: 18, borderRadius: '50%' }} /> 0G Native SocialFi
           </div>
 
           <h1 style={{ 
@@ -151,21 +153,23 @@ export default function LandingView({
           ))}
         </div>
 
-        {/* Call to Action Banner (Clean & Non-Boxy) */}
-        <div style={{ 
+        <div className="glass-panel fade-up" style={{ 
           marginTop: 100, 
           padding: '80px 40px', 
-          background: 'linear-gradient(180deg, transparent, var(--bg-secondary) 50%, transparent)',
+          borderRadius: 48,
           textAlign: 'center',
-          position: 'relative'
+          position: 'relative',
+          overflow: 'hidden',
+          background: 'rgba(236, 72, 153, 0.03)',
+          border: '1px solid var(--accent-glow)'
         }}>
           <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: '100%', height: '100%', background: 'radial-gradient(circle at 50% 50%, var(--accent-glow) 0%, transparent 70%)', opacity: 0.5, pointerEvents: 'none' }} />
           
-          <h2 style={{ fontSize: 40, fontWeight: 900, marginBottom: 20, position: 'relative' }}>The Social Layer for Web 4.0</h2>
-          <p style={{ color: 'var(--text-muted)', fontSize: 18, marginBottom: 40, maxWidth: 650, margin: '0 auto 40px', position: 'relative', lineHeight: 1.6 }}>
+          <h2 style={{ fontSize: 40, fontWeight: 900, marginBottom: 20, position: 'relative', color: 'var(--text)' }}>The Social Layer for Web 4.0</h2>
+          <p style={{ color: 'var(--text-muted)', fontSize: 18, marginBottom: 40, maxWidth: 650, margin: '0 auto 40px', position: 'relative', lineHeight: 1.6, fontWeight: 500 }}>
             Escape centralized silos. Join the first high-performance social network where you are the sole owner of your digital footprint.
           </p>
-          <button onClick={() => onNavigate('feed')} className="primary-btn" style={{ padding: '18px 48px', borderRadius: 30, fontSize: 18, position: 'relative' }}>
+          <button onClick={() => onNavigate('feed')} className="primary-btn" style={{ padding: '18px 48px', borderRadius: 32, fontSize: 18, position: 'relative', fontWeight: 800 }}>
             Start Posting to 0G
           </button>
         </div>

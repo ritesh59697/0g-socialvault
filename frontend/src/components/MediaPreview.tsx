@@ -42,18 +42,21 @@ export default function MediaPreview({
       setError('');
 
       try {
-        const nextMetadata = metadataRootHash
-          ? await downloadPostMetadata(metadataRootHash).catch(() => null)
-          : null;
+        // Fetch metadata and media in parallel to cut latency in half
+        const [nextMetadata, rawBlob] = await Promise.all([
+          metadataRootHash 
+            ? downloadPostMetadata(metadataRootHash).catch(() => null) 
+            : Promise.resolve(null),
+          downloadFromZeroG(mediaRootHash)
+        ]);
+
         if (cancelled) return;
         setMetadata(nextMetadata);
-
-        const rawBlob = await downloadFromZeroG(mediaRootHash);
-        if (cancelled) return;
 
         const typedBlob = rawBlob.type
           ? rawBlob
           : new Blob([rawBlob], { type: mimeFor(mediaType, nextMetadata) });
+        
         objectUrl = URL.createObjectURL(typedBlob);
         setMediaUrl(objectUrl);
         setStatus('ready');
@@ -83,9 +86,10 @@ export default function MediaPreview({
       )}
 
       {status === 'loading' && (
-        <div className="glass-panel" style={{ padding: compact ? 18 : 28, textAlign: 'center', boxShadow: 'none', background: 'var(--bg-secondary)' }}>
-          <div className="pulse-dot" style={{ fontSize: 24, marginBottom: 8 }}>⏳</div>
-          <div style={{ color: 'var(--text-muted)', fontSize: 13 }}>Loading media from 0G Storage...</div>
+        <div className="glass-panel" style={{ padding: compact ? 24 : 48, textAlign: 'center', boxShadow: 'none', background: 'var(--bg-secondary)', border: '1px dashed var(--border)' }}>
+          <div className="main-spinner" style={{ marginBottom: 20 }} />
+          <div style={{ color: 'var(--text)', fontWeight: 700, fontSize: 15, marginBottom: 4 }}>Buffering from 0G Storage...</div>
+          <div style={{ color: 'var(--text-muted)', fontSize: 12 }}>Retrieving decentralized blocks</div>
         </div>
       )}
 
@@ -99,21 +103,25 @@ export default function MediaPreview({
 
       {status === 'ready' && mediaType === IMAGE && (
         <img src={mediaUrl} alt={metadata?.caption || metadata?.fileName || '0G stored media'} style={{
-          width: '100%',
-          maxHeight: compact ? 360 : 520,
-          objectFit: 'contain',
+          maxWidth: '100%',
+          width: 'auto',
+          height: 'auto',
+          maxHeight: compact ? 400 : 600,
           display: 'block',
+          margin: '0 auto',
           borderRadius: 'var(--radius-md)',
           border: '1px solid var(--border)',
-          background: 'var(--bg-secondary)',
         }} />
       )}
 
       {status === 'ready' && mediaType === VIDEO && (
         <video src={mediaUrl} controls style={{
-          width: '100%',
-          maxHeight: compact ? 360 : 520,
+          maxWidth: '100%',
+          width: 'auto',
+          height: 'auto',
+          maxHeight: compact ? 400 : 600,
           display: 'block',
+          margin: '0 auto',
           borderRadius: 'var(--radius-md)',
           border: '1px solid var(--border)',
           background: '#000',

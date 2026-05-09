@@ -21,12 +21,14 @@ const ZERO_G_LOGO = "https://pbs.twimg.com/profile_images/2038084529374867456/Oq
 
 export default function PostCard({
   post, isConnected, isWrongNetwork, liked, tipAmount, isTipping,
-  onLike, onTip, onTipAmountChange,
+  onLike, onTip, onTipAmountChange, onDelete, isOwner,
 }: {
   post: any; isConnected: boolean; isWrongNetwork: boolean;
   liked: boolean; tipAmount: string; isTipping: boolean;
   onLike: () => void; onTip: () => void;
   onTipAmountChange: (v: string) => void;
+  onDelete?: () => void;
+  isOwner?: boolean;
 }) {
   const [authorName, setAuthorName] = useState<string | null>(null);
 
@@ -160,6 +162,26 @@ export default function PostCard({
           <span style={{ fontSize: 16, transition: 'transform 0.2s' }}>{liked ? '❤️' : '🤍'}</span> 
           {post.likeCount.toString()}
         </button>
+
+        {isOwner && onDelete && (
+          <button 
+            onClick={onDelete}
+            className="secondary-btn"
+            title="Delete Post"
+            style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              width: 38, height: 38, borderRadius: '50%',
+              background: 'rgba(239,68,68,0.05)',
+              border: '1px solid rgba(239,68,68,0.15)',
+              color: '#ef4444', cursor: 'pointer',
+              transition: 'all 0.2s',
+            }}
+            onMouseEnter={e => { e.currentTarget.style.background = 'rgba(239,68,68,0.12)'; e.currentTarget.style.borderColor = 'rgba(239,68,68,0.3)'; }}
+            onMouseLeave={e => { e.currentTarget.style.background = 'rgba(239,68,68,0.05)'; e.currentTarget.style.borderColor = 'rgba(239,68,68,0.15)'; }}
+          >
+            <span style={{ fontSize: 16 }}>🗑️</span>
+          </button>
+        )}
 
         <div className="tip-panel" style={{
           display: 'flex',
