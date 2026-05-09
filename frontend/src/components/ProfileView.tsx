@@ -336,7 +336,7 @@ export default function ProfileView({
                   isWrongNetwork={!!isWrongNetwork}
                   liked={likedPosts?.has(post.id.toString()) || false}
                   tipAmount={tipAmounts?.[post.id.toString()] || '0.01'}
-                  isTipping={isTipping}
+                  isTipping={!!isTipping}
                   onLike={() => onLike?.(post.id)}
                   onTip={() => onTip?.(post.id)}
                   onDelete={() => handleInternalDelete(post.id)}
