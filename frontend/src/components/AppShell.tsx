@@ -1,7 +1,7 @@
 'use client';
 import { useAccount, useConnect, useDisconnect, useReadContract, useSwitchChain } from 'wagmi';
 import { useEffect, useState, useMemo } from 'react';
-import { usePathname, useSearchParams } from 'next/navigation';
+import { usePathname, useSearchParams, useRouter } from 'next/navigation';
 import { SOCIALVAULT_ABI, SOCIALVAULT_ADDRESS } from '@/lib/contract';
 import { Tab } from '@/lib/types';
 import Sidebar from './Sidebar';
@@ -22,6 +22,7 @@ export default function AppShell({
 
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const router = useRouter();
 
   // Detect active tab from URL for persistent layout smoothness
   const effectiveTab = useMemo(() => {
@@ -71,8 +72,14 @@ export default function AppShell({
     }
   };
 
-  const handleTabChange = () => {
-    setIsSidebarOpen(false); // Close sidebar on mobile after selection
+  const handleTabChange = (t: Tab) => {
+    setIsSidebarOpen(false); 
+    if (t === 'home') router.push('/');
+    else if (t === 'profile') {
+      if (address) router.push(`/profile/${address}`);
+      else doConnect();
+    }
+    else router.push(`/?tab=${t}`);
   };
 
   return (

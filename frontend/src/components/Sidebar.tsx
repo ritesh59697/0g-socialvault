@@ -124,11 +124,7 @@ export default function Sidebar({
                   href={href}
                   onClick={() => { 
                     setOptimisticTab(t.key);
-                    // Only update parent state for non-profile tabs to avoid double-render flicker
-                    // Profile is a separate route that handles its own state
-                    if (t.key !== 'profile') {
-                      setActiveTab(t.key);
-                    }
+                    setActiveTab(t.key);
                     onClose(); 
                   }}
                   className={tabClassName}
