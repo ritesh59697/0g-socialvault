@@ -77,7 +77,7 @@ export default function AppShell({
     if (t === 'home') router.push('/');
     else if (t === 'profile') {
       if (address) router.push(`/profile/${address}`);
-      else doConnect();
+      else router.push(`/?tab=profile`);
     }
     else router.push(`/?tab=${t}`);
   };
