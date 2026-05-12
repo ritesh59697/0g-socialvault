@@ -129,6 +129,20 @@ export default function ProfileView({
 
     if (address) {
       const addr = address.toLowerCase();
+
+      // Clear old data if contract changed
+      const lastContract = localStorage.getItem('sv_last_contract');
+      const { SOCIALVAULT_ADDRESS } = require('@/lib/contract');
+      if (lastContract && lastContract !== SOCIALVAULT_ADDRESS) {
+        localStorage.removeItem(`sv_tips_${addr}`);
+        localStorage.removeItem(`sv_followers_${addr}`);
+        localStorage.setItem('sv_last_contract', SOCIALVAULT_ADDRESS);
+        setTips([]);
+        setFollowers([]);
+      } else {
+        localStorage.setItem('sv_last_contract', SOCIALVAULT_ADDRESS);
+      }
+
       const savedFollowers = localStorage.getItem(`sv_followers_${addr}`);
       if (savedFollowers) setFollowers(JSON.parse(savedFollowers));
       const savedTips = localStorage.getItem(`sv_tips_${addr}`);
