@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 
 import { Tab } from '@/lib/types';
+import { SOCIALVAULT_ADDRESS } from '@/lib/contract';
 
 const ZERO_G_LOGO = "https://pbs.twimg.com/profile_images/2038084529374867456/Oq74BA_I_400x400.jpg";
 
@@ -157,7 +158,7 @@ export default function LandingView({
             {[
               { label: '0G Mainnet', sub: 'ChainID: 16661', icon: <Link2 size={16} />, color: 'var(--accent)' },
               { label: '0G Storage Turbo', sub: 'storagescan.0g.ai', icon: <Box size={16} />, color: 'var(--accent2)' },
-              { label: 'SocialVault Contract', sub: '0x368ab585…Ed24eB', icon: <FileCode size={16} />, color: '#10b981' },
+              { label: 'SocialVault Contract', sub: `${SOCIALVAULT_ADDRESS?.slice(0, 10)}…${SOCIALVAULT_ADDRESS?.slice(-4)}`, icon: <FileCode size={16} />, color: '#10b981' },
             ].map(item => (
               <div key={item.label} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <span style={{ color: item.color }}>{item.icon}</span>
@@ -167,7 +168,7 @@ export default function LandingView({
                 </div>
               </div>
             ))}
-            <a href="https://chainscan.0g.ai/address/0x368ab585E1BF87A734a44044E3F48Dd3a7Ed24eB"
+            <a href={`https://chainscan.0g.ai/address/${SOCIALVAULT_ADDRESS}`}
               target="_blank" rel="noreferrer"
               style={{
                 fontSize: 12, fontWeight: 700, color: 'var(--accent)',
