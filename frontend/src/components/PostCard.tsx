@@ -104,7 +104,7 @@ export default function PostCard({
   }, [post.author, post.id, isConnected]);
 
   const handleLikeClick = async () => {
-    if (!isConnected || isWrongNetwork || isLikedOnChain || isLiking) return;
+    if (!isConnected || isWrongNetwork || hasLiked || isLiking) return;
     setIsLiking(true);
     try {
       await onLike();
@@ -237,6 +237,7 @@ export default function PostCard({
         <button 
           onClick={handleLikeClick} 
           disabled={!isConnected || isWrongNetwork || hasLiked || isLiking} 
+          title={hasLiked ? "You've already liked this post" : ""}
           className="secondary-btn"
           style={{
             display: 'flex', alignItems: 'center', gap: 6, padding: '8px 16px',
@@ -246,6 +247,7 @@ export default function PostCard({
             color: hasLiked ? '#ef4444' : 'var(--text-muted)',
             cursor: isConnected && !isWrongNetwork && !hasLiked && !isLiking ? 'pointer' : 'not-allowed',
             opacity: hasLiked ? 0.9 : 1,
+            pointerEvents: hasLiked ? 'none' : 'auto',
           }}
         >
           {isLiking ? (
