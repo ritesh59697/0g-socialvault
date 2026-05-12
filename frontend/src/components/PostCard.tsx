@@ -82,13 +82,13 @@ export default function PostCard({
           const { address: userAddr } = getAccount(config);
           
           if (userAddr) {
-            const hasLiked = await readContract(config, {
+            const hasLikedResult = await readContract(config, {
               address: SOCIALVAULT_ADDRESS,
               abi: SOCIALVAULT_ABI,
               functionName: 'liked',
               args: [post.id, userAddr as `0x${string}`],
-            }) as boolean;
-            setIsLikedOnChain(hasLiked);
+            });
+            setIsLikedOnChain(Boolean(hasLikedResult));
           }
         } catch (e) {
           // Silent fail

@@ -74,4 +74,12 @@ export const SOCIALVAULT_ABI = [
       { name: 'profileHash', type: 'string', indexed: false },
     ],
   },
+  {
+    name: 'liked', type: 'function', stateMutability: 'view',
+    inputs: [
+      { name: '', type: 'uint256' },
+      { name: '', type: 'address' },
+    ],
+    outputs: [{ name: '', type: 'bool' }],
+  },
 ] as const;
