@@ -70,6 +70,7 @@ export default function ProfileView({
   const [username, setUsername] = useState('');
   const [avatarUrl, setAvatarUrl] = useState('');
   const [isEditing, setIsEditing] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [tempBio, setTempBio] = useState('');
   const [tempUsername, setTempUsername] = useState('');
   const [tempAvatarUrl, setTempAvatarUrl] = useState('');
@@ -77,38 +78,62 @@ export default function ProfileView({
   const [following, setFollowing] = useState<string[]>([]);
   const [tips, setTips] = useState<any[]>([]);
 
+  // 0G Persistence
   useEffect(() => {
-    if (address) {
+    const loadProfile = async () => {
+      if (!address) return;
       const addr = address.toLowerCase();
+
+      // 1. Try localStorage first (fast cache)
       setBio(localStorage.getItem(`sv_bio_${addr}`) || '');
       setUsername(localStorage.getItem(`sv_name_${addr}`) || '');
       setAvatarUrl(localStorage.getItem(`sv_avatar_${addr}`) || '');
 
+      // 2. Fetch from 0G for truth
+      try {
+        const { readContract } = await import('@wagmi/core');
+        const { config } = await import('@/lib/wagmi');
+        const { SOCIALVAULT_ABI, SOCIALVAULT_ADDRESS } = await import('@/lib/contract');
+        const { downloadFromZeroG } = await import('@/lib/storage');
+
+        const hash = await readContract(config, {
+          address: SOCIALVAULT_ADDRESS,
+          abi: SOCIALVAULT_ABI,
+          functionName: 'profileHashes',
+          args: [address as `0x${string}`],
+        }) as string;
+
+        if (hash && hash.length > 10) {
+          const blob = await downloadFromZeroG(hash);
+          const data = JSON.parse(await blob.text());
+          if (data.username) {
+            setUsername(data.username);
+            localStorage.setItem(`sv_name_${addr}`, data.username);
+          }
+          if (data.bio) {
+            setBio(data.bio);
+            localStorage.setItem(`sv_bio_${addr}`, data.bio);
+          }
+          if (data.avatarUrl) {
+            setAvatarUrl(data.avatarUrl);
+            localStorage.setItem(`sv_avatar_${addr}`, data.avatarUrl);
+          }
+          window.dispatchEvent(new Event('sv_profile_updated'));
+        }
+      } catch (e) {
+        console.warn('On-chain profile load failed:', e);
+      }
+    };
+
+    loadProfile();
+
+    if (address) {
+      const addr = address.toLowerCase();
       const savedFollowers = localStorage.getItem(`sv_followers_${addr}`);
       if (savedFollowers) setFollowers(JSON.parse(savedFollowers));
-
       const savedTips = localStorage.getItem(`sv_tips_${addr}`);
       if (savedTips) {
         let parsed = JSON.parse(savedTips);
-        // Target specific 0.05 0G transaction for demo
-        let changed = false;
-        parsed = parsed.map((t: any) => {
-          if (t.amount === '0.05' || t.amount === 0.05) {
-            // Only adjust if it's "too new" (less than 1 minute old)
-            const age = Date.now() - (t.timestamp || 0);
-            if (age < 60000) {
-              changed = true;
-              // 7 hours = 7 * 3600 * 1000 = 25,200,000 ms
-              return { ...t, timestamp: Date.now() - 25200000 };
-            }
-          }
-          return t;
-        });
-        
-        if (changed) {
-          localStorage.setItem(`sv_tips_${addr}`, JSON.stringify(parsed));
-        }
-
         const realTips = parsed.filter((t: any) => t.id !== 1 && t.id !== 2 && t.id !== 3);
         setTips(realTips);
       }
@@ -118,67 +143,63 @@ export default function ProfileView({
       const savedFollowing = localStorage.getItem(`sv_following_${connectedAddress.toLowerCase()}`);
       if (savedFollowing) setFollowing(JSON.parse(savedFollowing));
     }
-  }, [address, connectedAddress, isOwnProfile]);
+  }, [address, connectedAddress]);
 
-  const profilePosts = useMemo(() => {
-    if (!address) return [];
-    return posts.filter((p: any) => 
-      p.author.toLowerCase() === address.toLowerCase()
-    );
-  }, [posts, address]);
+  const saveProfile = async () => {
+    if (!address || !isOwnProfile) return;
+    setIsSaving(true);
+    try {
+      const { uploadToZeroG } = await import('@/lib/storage');
+      const { writeContract, waitForTransactionReceipt } = await import('@wagmi/core');
+      const { config } = await import('@/lib/wagmi');
+      const { SOCIALVAULT_ABI, SOCIALVAULT_ADDRESS } = await import('@/lib/contract');
+      const { getConnectorClient } = await import('@wagmi/core');
 
-  const totalEarnings = useMemo(() => {
-    return profilePosts.reduce((acc, post) => acc + BigInt(post.tipTotal || 0), BigInt(0));
-  }, [profilePosts]);
+      // 1. Upload to 0G Storage
+      const profileData = {
+        username: tempUsername,
+        bio: tempBio,
+        avatarUrl: tempAvatarUrl,
+        updatedAt: new Date().toISOString(),
+      };
 
-  if (!isConnected || !address) {
-    return (
-      <div className="glass-panel fade-up profile-empty" style={{
-        padding: '64px 24px', textAlign: 'center',
-      }}>
-        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 20 }}>
-          <User size={64} style={{ color: 'var(--text-faint)' }} />
-        </div>
-        <p style={{ color: 'var(--text-muted)', marginBottom: 24, fontSize: 16, fontWeight: 500 }}>
-          {isOwnProfile ? 'Connect your wallet to view your 0G profile' : 'Connect your wallet to view this 0G profile'}
-        </p>
-        <button onClick={onConnect} className="primary-btn" style={{
-          padding: '12px 32px', borderRadius: 24, fontSize: 15,
-        }}>Connect Wallet</button>
-      </div>
-    );
-  }
+      const file = new File(
+        [JSON.stringify(profileData)],
+        `profile_${address.toLowerCase()}.json`,
+        { type: 'application/json' }
+      );
 
-  const handleFollow = () => {
-    if (!connectedAddress || !address) return;
-    const newFollowing = [...following, address.toLowerCase()];
-    const newFollowers = [...followers, connectedAddress.toLowerCase()];
-    setFollowing(newFollowing);
-    setFollowers(newFollowers);
-    localStorage.setItem(`sv_following_${connectedAddress.toLowerCase()}`, JSON.stringify(newFollowing));
-    localStorage.setItem(`sv_followers_${address.toLowerCase()}`, JSON.stringify(newFollowers));
-  };
+      const client = await getConnectorClient(config);
+      const result = await uploadToZeroG(file, client.transport);
 
-  const handleUnfollow = () => {
-    if (!connectedAddress || !address) return;
-    const newFollowing = following.filter(a => a !== address.toLowerCase());
-    const newFollowers = followers.filter(a => a !== connectedAddress.toLowerCase());
-    setFollowing(newFollowing);
-    setFollowers(newFollowers);
-    localStorage.setItem(`sv_following_${connectedAddress.toLowerCase()}`, JSON.stringify(newFollowing));
-    localStorage.setItem(`sv_followers_${address.toLowerCase()}`, JSON.stringify(newFollowers));
-  };
+      // 2. Link to Contract
+      const hash = await writeContract(config, {
+        address: SOCIALVAULT_ADDRESS,
+        abi: SOCIALVAULT_ABI,
+        functionName: 'updateProfile',
+        args: [result.rootHash],
+      });
 
-  const saveProfile = () => {
-    setBio(tempBio);
-    setUsername(tempUsername);
-    setAvatarUrl(tempAvatarUrl);
-    setIsEditing(false);
-    const addr = address.toLowerCase();
-    localStorage.setItem(`sv_bio_${addr}`, tempBio);
-    localStorage.setItem(`sv_name_${addr}`, tempUsername);
-    localStorage.setItem(`sv_avatar_${addr}`, tempAvatarUrl);
-    window.dispatchEvent(new Event('sv_profile_updated'));
+      await waitForTransactionReceipt(config, { hash });
+
+      // 3. Update local state
+      setBio(tempBio);
+      setUsername(tempUsername);
+      setAvatarUrl(tempAvatarUrl);
+      
+      const addr = address.toLowerCase();
+      localStorage.setItem(`sv_bio_${addr}`, tempBio);
+      localStorage.setItem(`sv_name_${addr}`, tempUsername);
+      localStorage.setItem(`sv_avatar_${addr}`, tempAvatarUrl);
+      
+      setIsEditing(false);
+      window.dispatchEvent(new Event('sv_profile_updated'));
+    } catch (e) {
+      console.error('Failed to save profile:', e);
+      alert('Error saving profile to 0G. Check console for details.');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const startEditing = () => {
@@ -531,8 +552,22 @@ export default function ProfileView({
                   </div>
 
                   <div style={{ display: 'flex', gap: 12, marginTop: 12 }}>
-                    <button onClick={saveProfile} className="primary-btn" style={{ padding: '12px 32px', borderRadius: 24, fontSize: 14, fontWeight: 800 }}>Save Changes</button>
-                    <button onClick={() => setIsEditing(false)} className="secondary-btn" style={{ padding: '12px 32px', borderRadius: 24, fontSize: 14, fontWeight: 800 }}>Cancel</button>
+                    <button 
+                      onClick={saveProfile} 
+                      disabled={isSaving}
+                      className="primary-btn" 
+                      style={{ padding: '12px 32px', borderRadius: 24, fontSize: 14, fontWeight: 800, display: 'flex', alignItems: 'center', gap: 8 }}
+                    >
+                      {isSaving ? (
+                        <>
+                          <div className="pulse-dot" style={{ width: 8, height: 8, background: 'white', borderRadius: '50%' }} />
+                          Saving...
+                        </>
+                      ) : (
+                        'Save Changes'
+                      )}
+                    </button>
+                    <button onClick={() => setIsEditing(false)} disabled={isSaving} className="secondary-btn" style={{ padding: '12px 32px', borderRadius: 24, fontSize: 14, fontWeight: 800 }}>Cancel</button>
                   </div>
                 </div>
               ) : (

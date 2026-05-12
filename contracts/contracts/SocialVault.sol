@@ -26,12 +26,14 @@ contract SocialVault is ReentrancyGuard {
     mapping(uint256 => Post) public posts;
     mapping(uint256 => mapping(address => bool)) public liked;
     mapping(address => uint256[]) public userPostIds;
+    mapping(address => string) public profileHashes;
 
     event PostCreated(uint256 indexed id, address indexed author,
         string storageRootHash, uint8 mediaType, uint256 timestamp);
     event PostLiked(uint256 indexed postId, address indexed liker);
     event TipSent(uint256 indexed postId, address indexed tipper,
         address indexed creator, uint256 amount);
+    event ProfileUpdated(address indexed user, string profileHash);
 
     constructor() {
         treasury = msg.sender;
@@ -98,5 +100,10 @@ contract SocialVault is ReentrancyGuard {
         external view returns (uint256[] memory)
     {
         return userPostIds[user];
+    }
+
+    function updateProfile(string calldata profileHash) external {
+        profileHashes[msg.sender] = profileHash;
+        emit ProfileUpdated(msg.sender, profileHash);
     }
 }

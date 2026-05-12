@@ -41,10 +41,45 @@ export default function PostCard({
   const [authorName, setAuthorName] = useState<string | null>(null);
 
   useEffect(() => {
-    if (post.author) {
-      const saved = localStorage.getItem(`sv_name_${post.author.toLowerCase()}`);
-      if (saved) setAuthorName(saved);
-    }
+    const loadName = async () => {
+      if (post.author) {
+        const addr = post.author.toLowerCase();
+        
+        // 1. Try localStorage
+        const saved = localStorage.getItem(`sv_name_${addr}`);
+        if (saved) {
+          setAuthorName(saved);
+          return;
+        }
+
+        // 2. Try on-chain
+        try {
+          const { readContract } = await import('@wagmi/core');
+          const { config } = await import('@/lib/wagmi');
+          const { SOCIALVAULT_ABI, SOCIALVAULT_ADDRESS } = await import('@/lib/contract');
+          const { downloadFromZeroG } = await import('@/lib/storage');
+
+          const hash = await readContract(config, {
+            address: SOCIALVAULT_ADDRESS,
+            abi: SOCIALVAULT_ABI,
+            functionName: 'profileHashes',
+            args: [post.author as `0x${string}`],
+          }) as string;
+
+          if (hash && hash.length > 10) {
+            const blob = await downloadFromZeroG(hash);
+            const data = JSON.parse(await blob.text());
+            if (data.username) {
+              setAuthorName(data.username);
+              localStorage.setItem(`sv_name_${addr}`, data.username);
+            }
+          }
+        } catch (e) {
+          // Silent fail
+        }
+      }
+    };
+    loadName();
   }, [post.author]);
 
   const mediaType = Number(post.mediaType);

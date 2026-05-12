@@ -21,7 +21,7 @@
 
 *Own your content. Monetize your influence. Exist permanently on-chain.*
 
-[**Live Demo**](https://0g-socialvault.vercel.app/) · [**Contract on ChainScan**](https://chainscan.0g.ai/address/0x368ab585E1BF87A734a44044E3F48Dd3a7Ed24eB) · [**Files on StorageScan**](https://storagescan.0g.ai) · [**Video Demo**](#)
+[**Live Demo**](https://0g-socialvault.vercel.app/) · [**Contract on ChainScan**](https://chainscan.0g.ai/address/0x368ab585E1BF87A734a44044E3F48Dd3a7Ed24eB) · [**Video Demo**](#)
 
 </div>
 
@@ -29,7 +29,7 @@
 
 ## The Problem
 
-Every social platform you use today owns your content. They can delete it, censor it, sell it, or shut down overnight — taking your digital identity with them. Web2 social media is built on a broken promise of ownership.
+Every social platform you use today owns your content. They can delete it, censor it, sell it, or shut down overnight - taking your digital identity with them. Web2 social media is built on a broken promise of ownership.
 
 **SocialVault changes that.**
 
@@ -47,7 +47,7 @@ SocialVault is a sovereign SocialFi platform where your posts, media, and social
 
 SocialVault is not a generic dApp that happens to use a blockchain. It is purpose-built around the 0G modular stack, using two of its core components in a deeply integrated way.
 
-### ⚡ 0G Storage — Permanent Media Layer
+### 0G Storage — Permanent Media Layer
 
 All heavy media (images, videos, post metadata JSON) is stored on **0G Storage Turbo nodes** — not on IPFS, not on S3, not on any centralized server.
 
@@ -63,7 +63,7 @@ When a user posts an image, the flow is:
 2. Metadata JSON → second `ZgBlob` → `Indexer.upload()` → 0G Storage nodes
 3. Both root hashes → `SocialVault.createPost()` → **0G Chain**
 
-### ⛓️ 0G Chain — Social Graph & Monetization Layer
+### 0G Chain — Social Graph & Monetization Layer
 
 The **SocialVault smart contract** handles all on-chain social logic — post pointers, engagement tracking, and the creator economy.
 
@@ -118,7 +118,7 @@ The **SocialVault smart contract** handles all on-chain social logic — post po
 | Storage Proof | ✅ Live | Every post links to StorageScan verification |
 | Live Feed | ✅ Live | Reads directly from 0G Chain contract |
 | Network Guard | ✅ Live | Auto-detects wrong network, prompts switch |
-| Profile Page | 🔜 Soon | Creator dashboard with earnings + post history |
+| Profile Page | ✅ Live | Creator dashboard with earnings + post history |
 
 ---
 

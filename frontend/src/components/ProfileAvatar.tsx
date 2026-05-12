@@ -16,14 +16,43 @@ export default function ProfileAvatar({
   const [imgError, setImgError] = useState(false);
   
   useEffect(() => {
-    const load = () => {
+    const load = async () => {
       if (address) {
-        const saved = localStorage.getItem(`sv_avatar_${address.toLowerCase()}`);
+        const addr = address.toLowerCase();
+        
+        // 1. Try localStorage
+        const saved = localStorage.getItem(`sv_avatar_${addr}`);
         if (saved) {
           setCustomAvatar(saved);
           setImgError(false);
-        } else {
-          setCustomAvatar(null);
+          return;
+        }
+
+        // 2. Try on-chain
+        try {
+          const { readContract } = await import('@wagmi/core');
+          const { config } = await import('@/lib/wagmi');
+          const { SOCIALVAULT_ABI, SOCIALVAULT_ADDRESS } = await import('@/lib/contract');
+          const { downloadFromZeroG } = await import('@/lib/storage');
+
+          const hash = await readContract(config, {
+            address: SOCIALVAULT_ADDRESS,
+            abi: SOCIALVAULT_ABI,
+            functionName: 'profileHashes',
+            args: [address as `0x${string}`],
+          }) as string;
+
+          if (hash && hash.length > 10) {
+            const blob = await downloadFromZeroG(hash);
+            const data = JSON.parse(await blob.text());
+            if (data.avatarUrl) {
+              setCustomAvatar(data.avatarUrl);
+              localStorage.setItem(`sv_avatar_${addr}`, data.avatarUrl);
+              setImgError(false);
+            }
+          }
+        } catch (e) {
+          // Silent fail
         }
       }
     };

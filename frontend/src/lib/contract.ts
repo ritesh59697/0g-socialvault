@@ -57,4 +57,21 @@ export const SOCIALVAULT_ABI = [
     name: 'postCount', type: 'function', stateMutability: 'view',
     inputs: [], outputs: [{ type: 'uint256' }],
   },
+  {
+    name: 'profileHashes', type: 'function', stateMutability: 'view',
+    inputs: [{ name: '', type: 'address' }],
+    outputs: [{ name: '', type: 'string' }],
+  },
+  {
+    name: 'updateProfile', type: 'function', stateMutability: 'nonpayable',
+    inputs: [{ name: 'profileHash', type: 'string' }],
+    outputs: [],
+  },
+  {
+    name: 'ProfileUpdated', type: 'event', anonymous: false,
+    inputs: [
+      { name: 'user', type: 'address', indexed: true },
+      { name: 'profileHash', type: 'string', indexed: false },
+    ],
+  },
 ] as const;
