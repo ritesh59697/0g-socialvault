@@ -21,7 +21,7 @@
 
 *Own your content. Monetize your influence. Exist permanently on-chain.*
 
-[**Live Demo**](https://0g-socialvault.vercel.app/) · [**Contract on ChainScan**](https://chainscan.0g.ai/address/0xBb5fd4f8eDd916Bbf22FB7Bc7B7dE9F5d84C547a) · [**Video Demo**](#)
+[**Live Demo**](https://0g-socialvault.vercel.app/) · [**Contract on ChainScan**](https://chainscan.0g.ai/address/0xBb5fd4f8eDd916Bbf22FB7Bc7B7dE9F5d84C547a) · [**Video Demo**](https://youtu.be/vMZjEOf3uKA)
 
 </div>
 
