@@ -12,7 +12,8 @@ import {
   Video as VideoIcon, 
   ShieldCheck, 
   Globe,
-  FileText
+  FileText,
+  Loader2
 } from 'lucide-react';
 
 const short = (a: string) => `${a.slice(0, 6)}...${a.slice(-4)}`;
@@ -39,48 +40,84 @@ export default function PostCard({
   isOwner?: boolean;
 }) {
   const [authorName, setAuthorName] = useState<string | null>(null);
+  const [isLikedOnChain, setIsLikedOnChain] = useState(false);
+  const [isLiking, setIsLiking] = useState(false);
 
   useEffect(() => {
-    const loadName = async () => {
+    const loadData = async () => {
       if (post.author) {
         const addr = post.author.toLowerCase();
         
-        // 1. Try localStorage
+        // 1. Try localStorage for name
         const saved = localStorage.getItem(`sv_name_${addr}`);
-        if (saved) {
-          setAuthorName(saved);
-          return;
-        }
+        if (saved) setAuthorName(saved);
 
-        // 2. Try on-chain
+        // 2. Try on-chain for name and liked status
         try {
-          const { readContract } = await import('wagmi/actions');
+          const { readContract, getAccount } = await import('wagmi/actions');
           const { wagmiConfig: config } = await import('@/lib/wagmi');
           const { SOCIALVAULT_ABI, SOCIALVAULT_ADDRESS } = await import('@/lib/contract');
           const { downloadFromZeroG } = await import('@/lib/storage');
 
-          const hash = await readContract(config, {
-            address: SOCIALVAULT_ADDRESS,
-            abi: SOCIALVAULT_ABI,
-            functionName: 'profileHashes',
-            args: [post.author as `0x${string}`],
-          }) as string;
+          // Fetch Name if not in cache
+          if (!saved) {
+            const hash = await readContract(config, {
+              address: SOCIALVAULT_ADDRESS,
+              abi: SOCIALVAULT_ABI,
+              functionName: 'profileHashes',
+              args: [post.author as `0x${string}`],
+            }) as string;
 
-          if (hash && hash.length > 10) {
-            const blob = await downloadFromZeroG(hash);
-            const data = JSON.parse(await blob.text());
-            if (data.username) {
-              setAuthorName(data.username);
-              localStorage.setItem(`sv_name_${addr}`, data.username);
+            if (hash && hash.length > 10) {
+              const blob = await downloadFromZeroG(hash);
+              const data = JSON.parse(await blob.text());
+              if (data.username) {
+                setAuthorName(data.username);
+                localStorage.setItem(`sv_name_${addr}`, data.username);
+              }
             }
+          }
+
+          // Fetch Liked status if user is connected
+          const { address: userAddr } = getAccount(config);
+          
+          if (userAddr) {
+            const hasLiked = await readContract(config, {
+              address: SOCIALVAULT_ADDRESS,
+              abi: SOCIALVAULT_ABI,
+              functionName: 'liked',
+              args: [post.id, userAddr as `0x${string}`],
+            }) as boolean;
+            setIsLikedOnChain(hasLiked);
           }
         } catch (e) {
           // Silent fail
         }
       }
     };
-    loadName();
-  }, [post.author]);
+    loadData();
+    
+    // Listen for global profile updates
+    const handleUpdate = () => loadData();
+    window.addEventListener('sv_profile_updated', handleUpdate);
+    return () => window.removeEventListener('sv_profile_updated', handleUpdate);
+  }, [post.author, post.id, isConnected]);
+
+  const handleLikeClick = async () => {
+    if (!isConnected || isWrongNetwork || isLikedOnChain || isLiking) return;
+    setIsLiking(true);
+    try {
+      await onLike();
+      // Optimistic UI
+      setIsLikedOnChain(true);
+    } catch (e) {
+      console.error('Like failed:', e);
+    } finally {
+      setIsLiking(false);
+    }
+  };
+
+  const hasLiked = liked || isLikedOnChain;
 
   const mediaType = Number(post.mediaType);
   const normalizedTip = tipAmount || '0.01';
@@ -198,19 +235,24 @@ export default function PostCard({
         display: 'flex', alignItems: 'center', gap: 12, paddingTop: 16, borderTop: '1px solid var(--border)' 
       }}>
         <button 
-          onClick={onLike} 
-          disabled={!isConnected || isWrongNetwork} 
+          onClick={handleLikeClick} 
+          disabled={!isConnected || isWrongNetwork || hasLiked || isLiking} 
           className="secondary-btn"
           style={{
             display: 'flex', alignItems: 'center', gap: 6, padding: '8px 16px',
             borderRadius: 24, fontSize: 13, fontWeight: 700,
-            background: liked ? 'rgba(239,68,68,0.08)' : 'transparent',
-            border: `1px solid ${liked ? 'rgba(239,68,68,0.3)' : 'var(--border)'}`,
-            color: liked ? '#ef4444' : 'var(--text-muted)',
-            cursor: isConnected && !isWrongNetwork ? 'pointer' : 'not-allowed',
+            background: hasLiked ? 'rgba(239,68,68,0.08)' : 'transparent',
+            border: `1px solid ${hasLiked ? 'rgba(239,68,68,0.3)' : 'var(--border)'}`,
+            color: hasLiked ? '#ef4444' : 'var(--text-muted)',
+            cursor: isConnected && !isWrongNetwork && !hasLiked && !isLiking ? 'pointer' : 'not-allowed',
+            opacity: hasLiked ? 0.9 : 1,
           }}
         >
-          <Heart size={16} fill={liked ? 'currentColor' : 'none'} /> 
+          {isLiking ? (
+            <Loader2 size={16} className="animate-spin" />
+          ) : (
+            <Heart size={16} fill={hasLiked ? 'currentColor' : 'none'} /> 
+          )}
           {post.likeCount.toString()}
         </button>
 
