@@ -91,8 +91,8 @@ export default function ProfileView({
 
       // 2. Fetch from 0G for truth
       try {
-        const { readContract } = await import('@wagmi/core');
-        const { config } = await import('@/lib/wagmi');
+        const { readContract } = await import('wagmi/actions');
+        const { wagmiConfig: config } = await import('@/lib/wagmi');
         const { SOCIALVAULT_ABI, SOCIALVAULT_ADDRESS } = await import('@/lib/contract');
         const { downloadFromZeroG } = await import('@/lib/storage');
 
@@ -145,15 +145,63 @@ export default function ProfileView({
     }
   }, [address, connectedAddress]);
 
+  const profilePosts = useMemo(() => {
+    if (!address) return [];
+    return posts.filter((p: any) => 
+      p.author.toLowerCase() === address.toLowerCase()
+    );
+  }, [posts, address]);
+
+  const totalEarnings = useMemo(() => {
+    return profilePosts.reduce((acc, post) => acc + BigInt(post.tipTotal || 0), BigInt(0));
+  }, [profilePosts]);
+
+  if (!isConnected || !address) {
+    return (
+      <div className="glass-panel fade-up profile-empty" style={{
+        padding: '64px 24px', textAlign: 'center',
+      }}>
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 20 }}>
+          <User size={64} style={{ color: 'var(--text-faint)' }} />
+        </div>
+        <p style={{ color: 'var(--text-muted)', marginBottom: 24, fontSize: 16, fontWeight: 500 }}>
+          {isOwnProfile ? 'Connect your wallet to view your 0G profile' : 'Connect your wallet to view this 0G profile'}
+        </p>
+        <button onClick={onConnect} className="primary-btn" style={{
+          padding: '12px 32px', borderRadius: 24, fontSize: 15,
+        }}>Connect Wallet</button>
+      </div>
+    );
+  }
+
+  const handleFollow = () => {
+    if (!connectedAddress || !address) return;
+    const newFollowing = [...following, address.toLowerCase()];
+    const newFollowers = [...followers, connectedAddress.toLowerCase()];
+    setFollowing(newFollowing);
+    setFollowers(newFollowers);
+    localStorage.setItem(`sv_following_${connectedAddress.toLowerCase()}`, JSON.stringify(newFollowing));
+    localStorage.setItem(`sv_followers_${address.toLowerCase()}`, JSON.stringify(newFollowers));
+  };
+
+  const handleUnfollow = () => {
+    if (!connectedAddress || !address) return;
+    const newFollowing = following.filter(a => a !== address.toLowerCase());
+    const newFollowers = followers.filter(a => a !== connectedAddress.toLowerCase());
+    setFollowing(newFollowing);
+    setFollowers(newFollowers);
+    localStorage.setItem(`sv_following_${connectedAddress.toLowerCase()}`, JSON.stringify(newFollowing));
+    localStorage.setItem(`sv_followers_${address.toLowerCase()}`, JSON.stringify(newFollowers));
+  };
+
   const saveProfile = async () => {
     if (!address || !isOwnProfile) return;
     setIsSaving(true);
     try {
       const { uploadToZeroG } = await import('@/lib/storage');
-      const { writeContract, waitForTransactionReceipt } = await import('@wagmi/core');
-      const { config } = await import('@/lib/wagmi');
+      const { writeContract, waitForTransactionReceipt, getConnectorClient } = await import('wagmi/actions');
+      const { wagmiConfig: config } = await import('@/lib/wagmi');
       const { SOCIALVAULT_ABI, SOCIALVAULT_ADDRESS } = await import('@/lib/contract');
-      const { getConnectorClient } = await import('@wagmi/core');
 
       // 1. Upload to 0G Storage
       const profileData = {

@@ -21,7 +21,7 @@
 
 *Own your content. Monetize your influence. Exist permanently on-chain.*
 
-[**Live Demo**](https://0g-socialvault.vercel.app/) · [**Contract on ChainScan**](https://chainscan.0g.ai/address/0x368ab585E1BF87A734a44044E3F48Dd3a7Ed24eB) · [**Video Demo**](#)
+[**Live Demo**](https://0g-socialvault.vercel.app/) · [**Contract on ChainScan**](https://chainscan.0g.ai/address/0xBb5fd4f8eDd916Bbf22FB7Bc7B7dE9F5d84C547a) · [**Video Demo**](#)
 
 </div>
 
@@ -72,8 +72,8 @@ The **SocialVault smart contract** handles all on-chain social logic — post po
 | **Network** | 0G Mainnet |
 | **Chain ID** | `16661` |
 | **RPC** | `https://evmrpc.0g.ai` |
-| **Contract Address** | [`0x368ab585E1BF87A734a44044E3F48Dd3a7Ed24eB`](https://chainscan.0g.ai/address/0x368ab585E1BF87A734a44044E3F48Dd3a7Ed24eB) |
-| **Explorer** | [chainscan.0g.ai](https://chainscan.0g.ai/address/0x368ab585E1BF87A734a44044E3F48Dd3a7Ed24eB) |
+| **Contract Address** | [`0xBb5fd4f8eDd916Bbf22FB7Bc7B7dE9F5d84C547a`](https://chainscan.0g.ai/address/0xBb5fd4f8eDd916Bbf22FB7Bc7B7dE9F5d84C547a) |
+| **Explorer** | [chainscan.0g.ai](https://chainscan.0g.ai/address/0xBb5fd4f8eDd916Bbf22FB7Bc7B7dE9F5d84C547a) |
 
 ---
 
@@ -119,6 +119,7 @@ The **SocialVault smart contract** handles all on-chain social logic — post po
 | Live Feed | ✅ Live | Reads directly from 0G Chain contract |
 | Network Guard | ✅ Live | Auto-detects wrong network, prompts switch |
 | Profile Page | ✅ Live | Creator dashboard with earnings + post history |
+| On-chain Identity | ✅ Live | Profile metadata (Name/Bio/PFP) anchored to 0G Chain |
 
 ---
 
@@ -138,6 +139,7 @@ function createPost(
 function likePost(uint256 postId) external
 function tipPost(uint256 postId) external payable  // Splits royalty auto
 function getFeed(uint256 page, uint256 pageSize) external view returns (Post[] memory, uint256 total)
+function updateProfile(string calldata profileHash) external // Anchors identity to 0G
 ```
 
 ---
@@ -175,7 +177,7 @@ npm run dev
 
 **`.env.local` variables:**
 ```env
-NEXT_PUBLIC_CONTRACT_ADDRESS=0x368ab585E1BF87A734a44044E3F48Dd3a7Ed24eB
+NEXT_PUBLIC_CONTRACT_ADDRESS=0xBb5fd4f8eDd916Bbf22FB7Bc7B7dE9F5d84C547a
 NEXT_PUBLIC_CHAIN_ID=16661
 NEXT_PUBLIC_RPC_URL=https://evmrpc.0g.ai
 NEXT_PUBLIC_STORAGE_INDEXER=https://indexer-storage-turbo.0g.ai
@@ -223,8 +225,8 @@ Every claim in this submission is verifiable on-chain:
 
 | Proof | Link |
 |---|---|
-| Smart Contract | [chainscan.0g.ai/address/0x368ab5...](https://chainscan.0g.ai/address/0x368ab585E1BF87A734a44044E3F48Dd3a7Ed24eB) |
-| Live Transactions | [chainscan.0g.ai — PostCreated events](https://chainscan.0g.ai/address/0x368ab585E1BF87A734a44044E3F48Dd3a7Ed24eB#events) |
+| Smart Contract | [chainscan.0g.ai/address/0xBb5fd4...](https://chainscan.0g.ai/address/0xBb5fd4f8eDd916Bbf22FB7Bc7B7dE9F5d84C547a) |
+| Live Transactions | [chainscan.0g.ai — PostCreated events](https://chainscan.0g.ai/address/0xBb5fd4f8eDd916Bbf22FB7Bc7B7dE9F5d84C547a#events) |
 | Storage Files | [storagescan.0g.ai](https://storagescan.0g.ai) |
 | Live App | [socialvault.vercel.app](https://0g-socialvault.vercel.app/) |
 

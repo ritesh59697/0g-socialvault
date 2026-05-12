@@ -30,8 +30,8 @@ export default function ProfileAvatar({
 
         // 2. Try on-chain
         try {
-          const { readContract } = await import('@wagmi/core');
-          const { config } = await import('@/lib/wagmi');
+          const { readContract } = await import('wagmi/actions');
+          const { wagmiConfig: config } = await import('@/lib/wagmi');
           const { SOCIALVAULT_ABI, SOCIALVAULT_ADDRESS } = await import('@/lib/contract');
           const { downloadFromZeroG } = await import('@/lib/storage');
 
