@@ -747,7 +747,7 @@ export default function ProfileView({
                     <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
                       <label className="secondary-btn" style={{ 
                         display: 'inline-flex', alignItems: 'center', gap: 10, padding: '12px 24px', borderRadius: 24, cursor: 'pointer',
-                        fontSize: 13, fontWeight: 700, border: '1px dashed var(--border)', background: 'rgba(255,255,255,0.03)'
+                        fontSize: 13, fontWeight: 700, border: '1px dashed var(--border)', background: 'var(--bg-secondary)'
                       }}>
                         <Camera size={18} /> Choose Photo
                         <input 

@@ -176,8 +176,8 @@ export default function LandingView({
           <div style={{
             display: 'inline-flex', justifyContent: 'center', flexWrap: 'wrap', 
             gap: isMobile ? 20 : 40, opacity: 0.95,
-            background: 'rgba(255, 255, 255, 0.02)',
-            border: '1px solid rgba(255, 255, 255, 0.04)',
+            background: 'var(--surface)',
+            border: '1px solid var(--border)',
             borderRadius: 24, padding: isMobile ? '12px 20px' : '16px 36px',
             marginTop: 36, backdropFilter: 'blur(8px)'
           }}>
@@ -223,8 +223,8 @@ export default function LandingView({
           gridTemplateColumns: isTablet ? '1fr' : '1.2fr 1fr',
           gap: 24,
           padding: isMobile ? 18 : 32,
-          background: 'rgba(18, 18, 24, 0.45)',
-          border: '1px solid rgba(255, 255, 255, 0.06)',
+          background: 'var(--surface)',
+          border: '1px solid var(--border)',
           borderRadius: 24,
           boxShadow: 'var(--shadow-lg)'
         }}>
@@ -323,7 +323,7 @@ export default function LandingView({
           {/* Right panel: Slicing / Merkle Tree diagram animation */}
           <div style={{
             display: 'flex', flexDirection: 'column', gap: 18, padding: 20,
-            background: 'rgba(255,255,255,0.01)', borderRadius: 16, border: '1px solid rgba(255,255,255,0.03)'
+            background: 'var(--bg-secondary)', borderRadius: 16, border: '1px solid var(--border)'
           }}>
             <div style={{ fontSize: 11, color: 'var(--text-faint)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: 0.5 }}>
               Visualizing Merkle Tree & Shards
