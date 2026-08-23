@@ -95,15 +95,7 @@ export default function LandingView({
   return (
     <div className="fade-up" style={{ paddingTop: 40, paddingBottom: 20, position: 'relative', overflowX: 'hidden', minHeight: '100vh', background: 'var(--bg)' }}>
       {/* Premium Cyber Grid Background */}
-      <div style={{
-        position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
-        background: `
-          radial-gradient(circle at 50% 0%, rgba(139, 92, 246, 0.15) 0%, transparent 70%),
-          radial-gradient(circle at 80% 30%, rgba(6, 182, 212, 0.08) 0%, transparent 60%),
-          radial-gradient(circle at 20% 70%, rgba(167, 139, 250, 0.05) 0%, transparent 70%)
-        `,
-        zIndex: 0, pointerEvents: 'none'
-      }} />
+      <div className="grid-pattern" />
 
       {/* Hero Section (Wrapped in app-rail for perfect side alignment) */}
       <section className="app-rail" style={{ position: 'relative', paddingTop: isMobile ? 40 : 60, paddingBottom: isMobile ? 40 : 60, textAlign: 'center', zIndex: 1 }}>
@@ -111,19 +103,18 @@ export default function LandingView({
           
           {/* Premium Hackathon Badge */}
           <div style={{
-            display: 'inline-flex', alignItems: 'center', gap: 10, padding: '8px 18px',
-            borderRadius: 30, fontSize: 11, fontWeight: 800, color: 'var(--accent)',
-            marginBottom: 24, background: 'var(--accent-glow)', textTransform: 'uppercase',
-            letterSpacing: 1.5, border: '1px solid rgba(139, 92, 246, 0.25)',
-            boxShadow: '0 0 20px rgba(139, 92, 246, 0.1)'
+            display: 'inline-flex', alignItems: 'center', gap: 8, padding: '6px 14px',
+            borderRadius: 20, fontSize: 11, fontWeight: 600, color: 'var(--text-muted)',
+            marginBottom: 24, background: 'var(--bg-secondary)', border: '1px solid var(--border)',
+            textTransform: 'uppercase', letterSpacing: 1
           }}>
-            <img src={ZERO_G_LOGO} alt="0G" style={{ width: 18, height: 18, borderRadius: '50%' }} /> 
+            <img src={ZERO_G_LOGO} alt="0G" style={{ width: 16, height: 16, borderRadius: '50%' }} /> 
             0G Native SocialFi & Sovereign Agents
           </div>
 
           <h1 style={{
             fontSize: isMobile ? '36px' : 'clamp(42px, 5.5vw, 60px)',
-            fontWeight: 900,
+            fontWeight: 800,
             lineHeight: 1.15,
             letterSpacing: '-0.03em',
             marginBottom: 24,
