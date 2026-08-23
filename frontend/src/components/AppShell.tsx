@@ -17,8 +17,8 @@ export default function AppShell({
   const { connect, connectors } = useConnect();
   const { disconnect } = useDisconnect();
   const { switchChain } = useSwitchChain();
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [theme, setTheme] = useState<'dark' | 'light'>('light');
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [theme, setTheme] = useState<'dark' | 'light'>('dark');
 
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -43,7 +43,11 @@ export default function AppShell({
       setTheme(saved); 
       document.documentElement.setAttribute('data-theme', saved); 
     } else {
-      document.documentElement.setAttribute('data-theme', 'light');
+      document.documentElement.setAttribute('data-theme', 'dark');
+    }
+    // Hide sidebar on mobile/tablet initially
+    if (typeof window !== 'undefined' && window.innerWidth <= 760) {
+      setIsSidebarOpen(false);
     }
   }, []);
 

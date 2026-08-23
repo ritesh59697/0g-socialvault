@@ -102,7 +102,7 @@ export default function AboutView() {
         <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 16 }}>
           <Trophy size={40} className="text-gradient" />
         </div>
-        <h3 style={{ fontSize: 22, fontWeight: 900, marginBottom: 12, color: 'var(--text)' }}>Built for the 0G APAC Hackathon</h3>
+        <h3 style={{ fontSize: 22, fontWeight: 900, marginBottom: 12, color: 'var(--text)' }}>Built for 0G Bridge by AKINDO (Wave 3)</h3>
         <p style={{ fontSize: 15, color: 'var(--text-muted)', maxWidth: 600, margin: '0 auto', lineHeight: 1.6, fontWeight: 500 }}>
           SocialVault is a flagship project demonstrating the power of 0G’s modular stack to scale decentralized social applications to the next billion users.
         </p>

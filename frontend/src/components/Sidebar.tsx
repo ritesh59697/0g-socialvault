@@ -50,13 +50,17 @@ export default function Sidebar({
     <>
       {/* Mobile Overlay */}
       {isOpen && (
-        <div onClick={onClose} style={{
-          position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.55)',
-          backdropFilter: 'blur(4px)', zIndex: 998,
-        }} />
+        <div 
+          onClick={onClose} 
+          className="sidebar-overlay"
+          style={{
+            position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.55)',
+            backdropFilter: 'blur(4px)', zIndex: 998,
+          }} 
+        />
       )}
 
-      <aside className={`sidebar ${isOpen ? 'sidebar-open' : ''}`} style={{ zIndex: 999 }}>
+      <aside className={`sidebar ${isOpen ? 'sidebar-open' : 'sidebar-collapsed'}`} style={{ zIndex: 999 }}>
         
         {/* Brand */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 32 }}>

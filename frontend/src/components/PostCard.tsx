@@ -43,6 +43,128 @@ export default function PostCard({
   const [isLikedOnChain, setIsLikedOnChain] = useState(false);
   const [isLiking, setIsLiking] = useState(false);
 
+  // 0G Pay USDC tipping states
+  const [tipType, setTipType] = useState<'native' | 'usdc'>('native');
+  const [usdcTipAmount, setUsdcTipAmount] = useState('1');
+  const [usdcBalance, setUsdcBalance] = useState('0');
+  const [isTippingUSDC, setIsTippingUSDC] = useState(false);
+  const [isMintingFaucet, setIsMintingFaucet] = useState(false);
+
+  const loadUsdcBalance = async () => {
+    if (!isConnected) return;
+    try {
+      const { readContract, getAccount } = await import('wagmi/actions');
+      const { wagmiConfig: config } = await import('@/lib/wagmi');
+      const { MOCKUSDC_ABI, MOCKUSDC_ADDRESS } = await import('@/lib/contract');
+      
+      const { address: userAddr } = getAccount(config);
+      if (userAddr) {
+        const bal = await readContract(config, {
+          address: MOCKUSDC_ADDRESS,
+          abi: MOCKUSDC_ABI,
+          functionName: 'balanceOf',
+          args: [userAddr as `0x${string}`],
+        }) as bigint;
+        
+        const { formatEther } = await import('viem');
+        setUsdcBalance(formatEther(bal));
+      }
+    } catch (e) {
+      console.warn('Failed to load USDC balance:', e);
+    }
+  };
+
+  useEffect(() => {
+    if (isConnected) {
+      loadUsdcBalance();
+    }
+  }, [isConnected]);
+
+  const handleFaucetClick = async () => {
+    if (!isConnected || isWrongNetwork || isMintingFaucet) return;
+    setIsMintingFaucet(true);
+    try {
+      const { writeContract, waitForTransactionReceipt, getAccount } = await import('wagmi/actions');
+      const { wagmiConfig: config } = await import('@/lib/wagmi');
+      const { MOCKUSDC_ABI, MOCKUSDC_ADDRESS } = await import('@/lib/contract');
+      
+      const { address: userAddr } = getAccount(config);
+      if (userAddr) {
+        const { parseEther } = await import('viem');
+        const txHash = await writeContract(config, {
+          address: MOCKUSDC_ADDRESS,
+          abi: MOCKUSDC_ABI,
+          functionName: 'mint',
+          args: [userAddr as `0x${string}`, parseEther('100')],
+        });
+        
+        await waitForTransactionReceipt(config, { hash: txHash });
+        alert('100 Mock USDC minted to your wallet!');
+        loadUsdcBalance();
+      }
+    } catch (e) {
+      console.error('Faucet failed:', e);
+      alert('Faucet request failed.');
+    } finally {
+      setIsMintingFaucet(false);
+    }
+  };
+
+  const handleUsdcTipClick = async () => {
+    if (!isConnected || isWrongNetwork || isTippingUSDC || Number(usdcTipAmount) <= 0) return;
+    setIsTippingUSDC(true);
+    try {
+      const { writeContract, waitForTransactionReceipt, getAccount, readContract } = await import('wagmi/actions');
+      const { wagmiConfig: config } = await import('@/lib/wagmi');
+      const { SOCIALVAULT_ADDRESS, SOCIALVAULT_ABI, MOCKUSDC_ADDRESS, MOCKUSDC_ABI } = await import('@/lib/contract');
+      const { parseEther } = await import('viem');
+      
+      const { address: userAddr } = getAccount(config);
+      if (!userAddr) return;
+
+      const parsedAmount = parseEther(usdcTipAmount);
+
+      // 1. Check current allowance
+      const allowance = await readContract(config, {
+        address: MOCKUSDC_ADDRESS,
+        abi: MOCKUSDC_ABI,
+        functionName: 'allowance',
+        args: [userAddr as `0x${string}`, SOCIALVAULT_ADDRESS],
+      }) as bigint;
+
+      // 2. Approve if allowance is less than required
+      if (allowance < parsedAmount) {
+        console.log('USDC allowance too low. Requesting approval...');
+        const appTx = await writeContract(config, {
+          address: MOCKUSDC_ADDRESS,
+          abi: MOCKUSDC_ABI,
+          functionName: 'approve',
+          args: [SOCIALVAULT_ADDRESS, parsedAmount],
+        });
+        await waitForTransactionReceipt(config, { hash: appTx });
+      }
+
+      // 3. Execute tipPostUSDC
+      const tipTx = await writeContract(config, {
+        address: SOCIALVAULT_ADDRESS,
+        abi: SOCIALVAULT_ABI,
+        functionName: 'tipPostUSDC',
+        args: [post.id, parsedAmount],
+      });
+      await waitForTransactionReceipt(config, { hash: tipTx });
+
+      alert(`Successfully tipped ${usdcTipAmount} USDC to creator!`);
+      loadUsdcBalance();
+      
+      window.dispatchEvent(new Event('sv_profile_updated'));
+    } catch (e) {
+      console.error('USDC Tip failed:', e);
+      alert('USDC Tipping failed. Check console.');
+    } finally {
+      setIsTippingUSDC(false);
+    }
+  };
+
   useEffect(() => {
     const loadData = async () => {
       if (post.author) {
@@ -262,88 +384,207 @@ export default function PostCard({
         <div className="tip-panel" style={{
           display: 'flex',
           flexDirection: 'column',
-          gap: 8,
-          padding: '12px 16px',
-          borderRadius: 16,
+          gap: 12,
+          padding: '16px 20px',
+          borderRadius: 20,
           background: 'var(--bg-secondary)',
           border: '1px solid var(--border)',
-          minWidth: 280,
+          minWidth: 320,
           flex: 1,
         }}>
+          {/* Tip Type Tab Controls */}
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <div style={{ fontSize: 12, fontWeight: 800, color: 'var(--text)' }}>Support Creator</div>
+            <div style={{ display: 'flex', gap: 6, background: 'var(--bg-primary)', padding: 4, borderRadius: 10, border: '1px solid var(--border)' }}>
+              <button
+                type="button"
+                onClick={() => setTipType('native')}
+                style={{
+                  padding: '6px 12px', borderRadius: 8, border: 'none',
+                  background: tipType === 'native' ? 'var(--bg-secondary)' : 'transparent',
+                  color: tipType === 'native' ? 'var(--text)' : 'var(--text-muted)',
+                  fontSize: 12, fontWeight: 700, cursor: 'pointer', transition: 'all 0.2s'
+                }}
+              >
+                Native (0G)
+              </button>
+              <button
+                type="button"
+                onClick={() => setTipType('usdc')}
+                style={{
+                  padding: '6px 12px', borderRadius: 8, border: 'none',
+                  background: tipType === 'usdc' ? 'var(--bg-secondary)' : 'transparent',
+                  color: tipType === 'usdc' ? 'var(--text)' : 'var(--text-muted)',
+                  fontSize: 12, fontWeight: 700, cursor: 'pointer', transition: 'all 0.2s'
+                }}
+              >
+                0G Pay (USDC)
+              </button>
+            </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 10, fontWeight: 800, color: 'var(--text-faint)', textTransform: 'uppercase', letterSpacing: 0.5 }}>
-              Tip in <OGLogo size={10} />
+              Tip Creator
             </div>
           </div>
 
-          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-            {TIP_PRESETS.map((preset) => {
-              const active = normalizedTip === preset;
-              return (
-                <button
-                  key={preset}
-                  type="button"
-                  onClick={() => onTipAmountChange(preset)}
-                  className="secondary-btn"
-                  style={{
-                    padding: '5px 12px',
-                    borderRadius: 8,
-                    fontSize: 11,
+          {tipType === 'native' ? (
+            <>
+              {/* Native Tipping controls */}
+              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                {TIP_PRESETS.map((preset) => {
+                  const active = normalizedTip === preset;
+                  return (
+                    <button
+                      key={preset}
+                      type="button"
+                      onClick={() => onTipAmountChange(preset)}
+                      className="secondary-btn"
+                      style={{
+                        padding: '5px 12px',
+                        borderRadius: 8,
+                        fontSize: 11,
+                        fontWeight: 700,
+                        background: active ? 'rgba(236,72,153,0.08)' : 'var(--bg)',
+                        borderColor: active ? 'rgba(236,72,153,0.4)' : 'var(--border)',
+                        color: active ? 'var(--accent)' : 'var(--text-muted)',
+                      }}
+                    >
+                      {preset}
+                    </button>
+                  );
+                })}
+              </div>
+
+              <div className="tip-controls" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  padding: '0 12px',
+                  minHeight: 38,
+                  borderRadius: 10,
+                  background: 'var(--bg)',
+                  border: '1px solid var(--border)',
+                  flex: 1,
+                }}>
+                  <OGLogo size={12} />
+                  <input type="number" min="0" step="0.001" value={normalizedTip} onChange={e => onTipAmountChange(e.target.value)} style={{
+                    width: '100%',
+                    background: 'transparent',
+                    border: 'none',
+                    color: 'var(--text)',
+                    fontSize: 14,
+                    outline: 'none',
                     fontWeight: 700,
-                    background: active ? 'rgba(236,72,153,0.08)' : 'var(--bg)',
-                    borderColor: active ? 'rgba(236,72,153,0.4)' : 'var(--border)',
-                    color: active ? 'var(--accent)' : 'var(--text-muted)',
+                  }} />
+                </div>
+                <button 
+                  onClick={onTip} 
+                  disabled={!isConnected || isWrongNetwork || isTipping || Number(normalizedTip) <= 0} 
+                  className="primary-btn" 
+                  style={{
+                    minHeight: 38,
+                    padding: '0 16px',
+                    borderRadius: 10,
+                    fontSize: 12,
+                    whiteSpace: 'nowrap',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 6
                   }}
                 >
-                  {preset}
+                  <Zap size={14} fill={isTipping ? 'none' : 'currentColor'} className={isTipping ? 'pulse-dot' : ''} />
+                  {isTipping ? 'Processing...' : `Tip ${normalizedTip} 0G`}
                 </button>
-              );
-            })}
-          </div>
+              </div>
+            </>
+          ) : (
+            <>
+              {/* USDC Tipping controls */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 600 }}>
+                  USDC Balance: <span style={{ color: 'var(--text)', fontWeight: 800 }}>{Number(usdcBalance).toFixed(2)} USDC</span>
+                </div>
+                {isConnected && (
+                  <button
+                    type="button"
+                    onClick={handleFaucetClick}
+                    disabled={isMintingFaucet}
+                    style={{ background: 'none', border: 'none', color: 'var(--accent)', fontSize: 11, fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}
+                  >
+                    {isMintingFaucet ? 'Minting...' : 'Get Free USDC (Faucet)'}
+                  </button>
+                )}
+              </div>
 
-          <div className="tip-controls" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 6,
-              padding: '0 12px',
-              minHeight: 38,
-              borderRadius: 10,
-              background: 'var(--bg)',
-              border: '1px solid var(--border)',
-              flex: 1,
-            }}>
-              <OGLogo size={12} />
-              <input type="number" min="0" step="0.001" value={normalizedTip} onChange={e => onTipAmountChange(e.target.value)} style={{
-                width: '100%',
-                background: 'transparent',
-                border: 'none',
-                color: 'var(--text)',
-                fontSize: 14,
-                outline: 'none',
-                fontWeight: 700,
-              }} />
-            </div>
-            <button 
-              onClick={onTip} 
-              disabled={!isConnected || isWrongNetwork || isTipping || Number(normalizedTip) <= 0} 
-              className="primary-btn" 
-              style={{
-                minHeight: 38,
-                padding: '0 16px',
-                borderRadius: 10,
-                fontSize: 12,
-                whiteSpace: 'nowrap',
-                display: 'flex',
-                alignItems: 'center',
-                gap: 6
-              }}
-            >
-              <Zap size={14} fill={isTipping ? 'none' : 'currentColor'} className={isTipping ? 'pulse-dot' : ''} />
-              {isTipping ? 'Processing...' : `Tip ${normalizedTip} 0G`}
-            </button>
-          </div>
+              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                {['1', '5', '10'].map((preset) => {
+                  const active = usdcTipAmount === preset;
+                  return (
+                    <button
+                      key={preset}
+                      type="button"
+                      onClick={() => setUsdcTipAmount(preset)}
+                      className="secondary-btn"
+                      style={{
+                        padding: '5px 12px',
+                        borderRadius: 8,
+                        fontSize: 11,
+                        fontWeight: 700,
+                        background: active ? 'rgba(99,102,241,0.08)' : 'var(--bg)',
+                        borderColor: active ? 'rgba(99,102,241,0.4)' : 'var(--border)',
+                        color: active ? 'var(--accent)' : 'var(--text-muted)',
+                      }}
+                    >
+                      {preset} USDC
+                    </button>
+                  );
+                })}
+              </div>
+
+              <div className="tip-controls" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  padding: '0 12px',
+                  minHeight: 38,
+                  borderRadius: 10,
+                  background: 'var(--bg)',
+                  border: '1px solid var(--border)',
+                  flex: 1,
+                }}>
+                  <span style={{ fontSize: 13, fontWeight: 800, color: 'var(--text-muted)' }}>$</span>
+                  <input type="number" min="0" step="0.5" value={usdcTipAmount} onChange={e => setUsdcTipAmount(e.target.value)} style={{
+                    width: '100%',
+                    background: 'transparent',
+                    border: 'none',
+                    color: 'var(--text)',
+                    fontSize: 14,
+                    outline: 'none',
+                    fontWeight: 700,
+                  }} />
+                </div>
+                <button 
+                  onClick={handleUsdcTipClick} 
+                  disabled={!isConnected || isWrongNetwork || isTippingUSDC || Number(usdcTipAmount) <= 0} 
+                  className="primary-btn" 
+                  style={{
+                    minHeight: 38,
+                    padding: '0 16px',
+                    borderRadius: 10,
+                    fontSize: 12,
+                    whiteSpace: 'nowrap',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 6,
+                    background: 'linear-gradient(135deg, var(--accent) 0%, var(--accent2) 100%)'
+                  }}
+                >
+                  <Zap size={14} fill={isTippingUSDC ? 'none' : 'currentColor'} className={isTippingUSDC ? 'pulse-dot' : ''} />
+                  {isTippingUSDC ? 'Processing...' : `Tip ${usdcTipAmount} USDC`}
+                </button>
+              </div>
+            </>
+          )}
         </div>
         <span style={{ marginLeft: 'auto', fontSize: 11, color: 'var(--text-faint)', fontFamily: 'monospace', fontWeight: 600 }}>#{post.id.toString()}</span>
       </div>

@@ -2,7 +2,7 @@
 
 <img src="https://img.shields.io/badge/0G-Mainnet-7c3aed?style=for-the-badge&logo=ethereum&logoColor=white" />
 <img src="https://img.shields.io/badge/Chain_ID-16661-0891b2?style=for-the-badge" />
-<img src="https://img.shields.io/badge/Hackathon-0G_APAC_2026-ec4899?style=for-the-badge" />
+<img src="https://img.shields.io/badge/Hackathon-0G_Bridge_AKINDO-ec4899?style=for-the-badge" />
 <img src="https://img.shields.io/badge/Track-Web_4.0_Open_Innovation-22c55e?style=for-the-badge" />
 <img src="https://img.shields.io/badge/License-MIT-f59e0b?style=for-the-badge" />
 
@@ -234,6 +234,6 @@ Every claim in this submission is verifiable on-chain:
 
 <div align="center">
 
-Built with ❤️ for the **0G APAC Hackathon 2026** · Track 4: Web 4.0 Open Innovation
+Built with ❤️ for the **0G Bridge Hackathon by AKINDO (Wave 3)** · Apollo Builders Track
 
 </div>

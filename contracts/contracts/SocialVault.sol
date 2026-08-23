@@ -2,8 +2,11 @@
 pragma solidity ^0.8.24;
 
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 contract SocialVault is ReentrancyGuard {
+    using SafeERC20 for IERC20;
 
     enum MediaType { TEXT, IMAGE, VIDEO }
 
@@ -17,10 +20,12 @@ contract SocialVault is ReentrancyGuard {
         uint256 likeCount;
         uint256 tipTotal;
         uint16  royaltyBps;
+        uint256 tipUSDCTotal;
     }
 
     uint256 public postCount;
     address public treasury;
+    address public usdcToken;
     uint256 public constant PLATFORM_FEE_BPS = 200;
 
     mapping(uint256 => Post) public posts;
@@ -33,10 +38,13 @@ contract SocialVault is ReentrancyGuard {
     event PostLiked(uint256 indexed postId, address indexed liker);
     event TipSent(uint256 indexed postId, address indexed tipper,
         address indexed creator, uint256 amount);
+    event TipUSDCSent(uint256 indexed postId, address indexed tipper,
+        address indexed creator, uint256 amount);
     event ProfileUpdated(address indexed user, string profileHash);
 
-    constructor() {
+    constructor(address _usdcToken) {
         treasury = msg.sender;
+        usdcToken = _usdcToken;
     }
 
     function createPost(
@@ -50,7 +58,7 @@ contract SocialVault is ReentrancyGuard {
 
         uint256 id = ++postCount;
         posts[id] = Post(id, msg.sender, storageRootHash,
-            metadataRootHash, mediaType, block.timestamp, 0, 0, royaltyBps);
+            metadataRootHash, mediaType, block.timestamp, 0, 0, royaltyBps, 0);
         userPostIds[msg.sender].push(id);
 
         emit PostCreated(id, msg.sender, storageRootHash,
@@ -83,6 +91,26 @@ contract SocialVault is ReentrancyGuard {
             require(ok2, "Fee failed");
         }
         emit TipSent(postId, msg.sender, p.author, msg.value);
+    }
+
+    function tipPostUSDC(uint256 postId, uint256 amount) external nonReentrant {
+        Post storage p = posts[postId];
+        require(p.id != 0, "Post not found");
+        require(amount > 0, "Send USDC tokens");
+        require(msg.sender != p.author, "Can't tip yourself");
+        require(usdcToken != address(0), "USDC token not set");
+
+        uint256 fee = (amount * PLATFORM_FEE_BPS) / 10000;
+        uint256 creatorAmount = amount - fee;
+
+        p.tipUSDCTotal += amount;
+        
+        IERC20(usdcToken).safeTransferFrom(msg.sender, p.author, creatorAmount);
+        if (fee > 0) {
+            IERC20(usdcToken).safeTransferFrom(msg.sender, treasury, fee);
+        }
+
+        emit TipUSDCSent(postId, msg.sender, p.author, amount);
     }
 
     function getFeed(uint256 page, uint256 pageSize)

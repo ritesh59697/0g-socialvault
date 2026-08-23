@@ -78,6 +78,14 @@ export default function ProfileView({
   const [following, setFollowing] = useState<string[]>([]);
   const [tips, setTips] = useState<any[]>([]);
 
+  // Agentic ID state
+  const [hasAgenticId, setHasAgenticId] = useState(false);
+  const [agenticIdTokenId, setAgenticIdTokenId] = useState<number | null>(null);
+  const [agenticIdInfo, setAgenticIdInfo] = useState<{ dataDescription: string, dataHash: string } | null>(null);
+  const [isMintingAgenticId, setIsMintingAgenticId] = useState(false);
+  const [isUpdatingAgenticId, setIsUpdatingAgenticId] = useState(false);
+  const [tempAgentDescription, setTempAgentDescription] = useState('');
+
   // 0G Persistence
   useEffect(() => {
     const loadProfile = async () => {
@@ -122,6 +130,48 @@ export default function ProfileView({
         }
       } catch (e) {
         console.warn('On-chain profile load failed:', e);
+      }
+
+      // 3. Fetch Agentic ID status
+      try {
+        const { readContract } = await import('wagmi/actions');
+        const { wagmiConfig: config } = await import('@/lib/wagmi');
+        const { AGENTNFT_ABI, AGENTNFT_ADDRESS } = await import('@/lib/contract');
+
+        const hasAid = await readContract(config, {
+          address: AGENTNFT_ADDRESS,
+          abi: AGENTNFT_ABI,
+          functionName: 'hasAgenticId',
+          args: [address as `0x${string}`],
+        }) as boolean;
+
+        setHasAgenticId(hasAid);
+
+        if (hasAid) {
+          const aid = await readContract(config, {
+            address: AGENTNFT_ADDRESS,
+            abi: AGENTNFT_ABI,
+            functionName: 'userAgenticId',
+            args: [address as `0x${string}`],
+          }) as bigint;
+
+          const data = await readContract(config, {
+            address: AGENTNFT_ADDRESS,
+            abi: AGENTNFT_ABI,
+            functionName: 'intelligentDataOf',
+            args: [aid],
+          }) as [string, `0x${string}`];
+
+          setAgenticIdTokenId(Number(aid));
+          setAgenticIdInfo({
+            dataDescription: data[0],
+            dataHash: data[1],
+          });
+        } else {
+          setAgenticIdInfo(null);
+        }
+      } catch (e) {
+        console.warn('Agentic ID load failed:', e);
       }
     };
 
@@ -168,6 +218,10 @@ export default function ProfileView({
 
   const totalEarnings = useMemo(() => {
     return profilePosts.reduce((acc, post) => acc + BigInt(post.tipTotal || 0), BigInt(0));
+  }, [profilePosts]);
+
+  const totalEarningsUSDC = useMemo(() => {
+    return profilePosts.reduce((acc, post) => acc + BigInt(post.tipUSDCTotal || 0), BigInt(0));
   }, [profilePosts]);
 
   if (!isConnected || !address) {
@@ -272,12 +326,123 @@ export default function ProfileView({
     setActiveSubTab('info');
   };
 
+  const mintAgenticId = async () => {
+    if (!address || !isOwnProfile) return;
+    setIsMintingAgenticId(true);
+    try {
+      const { writeContract, waitForTransactionReceipt, getConnectorClient } = await import('wagmi/actions');
+      const { wagmiConfig: config } = await import('@/lib/wagmi');
+      const { AGENTNFT_ABI, AGENTNFT_ADDRESS } = await import('@/lib/contract');
+      const { uploadToZeroG } = await import('@/lib/storage');
+
+      // 1. Generate/simulate metadata and upload to 0G Storage
+      const agentMetadata = {
+        name: `${username || 'Creator'}'s Assistant`,
+        description: tempAgentDescription,
+        creator: address,
+        createdAt: new Date().toISOString(),
+      };
+      
+      const file = new File(
+        [JSON.stringify(agentMetadata)],
+        `agent_${address.toLowerCase()}.json`,
+        { type: 'application/json' }
+      );
+
+      const client = await getConnectorClient(config);
+      const result = await uploadToZeroG(file, client.transport);
+
+      // Generate a dataHash (bytes32) from the description
+      const { keccak256, toUtf8Bytes } = await import('ethers');
+      const hashBytes32 = keccak256(toUtf8Bytes(tempAgentDescription)) as `0x${string}`;
+
+      // 2. Mint on-chain
+      const txHash = await writeContract(config, {
+        address: AGENTNFT_ADDRESS,
+        abi: AGENTNFT_ABI,
+        functionName: 'mintIntelligentNFT',
+        args: [
+          address as `0x${string}`,
+          `https://indexer-storage-turbo.0g.ai/download?hash=${result.rootHash}`,
+          tempAgentDescription,
+          hashBytes32
+        ],
+      });
+
+      await waitForTransactionReceipt(config, { hash: txHash });
+
+      // Load minted token ID
+      const newAid = await (await import('wagmi/actions')).readContract(config, {
+        address: AGENTNFT_ADDRESS,
+        abi: AGENTNFT_ABI,
+        functionName: 'userAgenticId',
+        args: [address as `0x${string}`],
+      }) as bigint;
+
+      setHasAgenticId(true);
+      setAgenticIdTokenId(Number(newAid));
+      setAgenticIdInfo({
+        dataDescription: tempAgentDescription,
+        dataHash: hashBytes32,
+      });
+
+      setTempAgentDescription('');
+      alert('Sovereign Agentic ID profile minted successfully on-chain!');
+      window.dispatchEvent(new Event('sv_profile_updated'));
+    } catch (e) {
+      console.error('Failed to mint Agentic ID:', e);
+      alert('Error minting Agentic ID. Check console for details.');
+    } finally {
+      setIsMintingAgenticId(false);
+    }
+  };
+
+  const updateAgenticId = async () => {
+    if (!address || !isOwnProfile || agenticIdTokenId === null) return;
+    setIsUpdatingAgenticId(true);
+    try {
+      const { writeContract, waitForTransactionReceipt } = await import('wagmi/actions');
+      const { wagmiConfig: config } = await import('@/lib/wagmi');
+      const { AGENTNFT_ABI, AGENTNFT_ADDRESS } = await import('@/lib/contract');
+
+      const { keccak256, toUtf8Bytes } = await import('ethers');
+      const hashBytes32 = keccak256(toUtf8Bytes(tempAgentDescription)) as `0x${string}`;
+
+      const txHash = await writeContract(config, {
+        address: AGENTNFT_ADDRESS,
+        abi: AGENTNFT_ABI,
+        functionName: 'updateIntelligentData',
+        args: [
+          BigInt(agenticIdTokenId),
+          tempAgentDescription,
+          hashBytes32
+        ],
+      });
+
+      await waitForTransactionReceipt(config, { hash: txHash });
+
+      setAgenticIdInfo({
+        dataDescription: tempAgentDescription,
+        dataHash: hashBytes32,
+      });
+
+      setTempAgentDescription('');
+      alert('Agent memory state updated successfully!');
+    } catch (e) {
+      console.error('Failed to update Agentic ID:', e);
+      alert('Error updating Agent memory. Check console for details.');
+    } finally {
+      setIsUpdatingAgenticId(false);
+    }
+  };
+
   const short = (a: string) => `${a.slice(0, 6)}...${a.slice(-4)}`;
   const isFollowing = following.includes(address.toLowerCase());
 
   const stats = [
     { label: 'Total Posts', value: profilePosts.length.toString(), color: 'var(--accent)', icon: FileText },
     { label: 'Total Tips', value: `${formatEther(totalEarnings).slice(0, 6)} 0G`, color: 'var(--success)', icon: Coins },
+    { label: '0G Pay Tips', value: `${formatEther(totalEarningsUSDC).slice(0, 6)} USDC`, color: 'var(--accent)', icon: Coins },
     { label: 'Followers', value: followers.length.toString(), color: 'var(--accent2)', icon: Users },
   ];
 
@@ -478,15 +643,26 @@ export default function ProfileView({
               <BarChart3 size={20} className="text-gradient" /> Revenue Overview
             </h3>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 24, marginBottom: 40 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 24, marginBottom: 40 }}>
               <div style={{ padding: 28, borderRadius: 24, background: 'linear-gradient(135deg, rgba(139,92,246,0.1), rgba(6,182,212,0.1))', border: '1px solid var(--border)' }}>
-                <div style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 12 }}>Total Tips Received</div>
+                <div style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 12 }}>Total 0G Tips</div>
                 <div style={{ fontSize: 36, fontWeight: 900, color: 'var(--text)', display: 'flex', alignItems: 'center', gap: 10 }}>
                   <OGLogo size={36} /> {formatEther(totalEarnings).slice(0, 8)} <span style={{ fontSize: 16, opacity: 0.7, fontWeight: 700 }}>0G</span>
                 </div>
                 {totalEarnings > BigInt(0) && (
                   <div style={{ fontSize: 12, color: 'var(--success)', marginTop: 12, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 6 }}>
                     <CheckCircle2 size={14} /> ↑ 100% since start
+                  </div>
+                )}
+              </div>
+              <div style={{ padding: 28, borderRadius: 24, background: 'linear-gradient(135deg, rgba(99,102,241,0.1), rgba(168,85,247,0.1))', border: '1px solid var(--border)' }}>
+                <div style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 12 }}>USDC Tips (0G Pay)</div>
+                <div style={{ fontSize: 36, fontWeight: 900, color: 'var(--text)', display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <span style={{ fontSize: 36, fontWeight: 900, color: 'var(--accent)' }}>$</span> {formatEther(totalEarningsUSDC).slice(0, 8)} <span style={{ fontSize: 16, opacity: 0.7, fontWeight: 700 }}>USDC</span>
+                </div>
+                {totalEarningsUSDC > BigInt(0) && (
+                  <div style={{ fontSize: 12, color: 'var(--success)', marginTop: 12, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <CheckCircle2 size={14} /> Stablecoin tips received
                   </div>
                 )}
               </div>
@@ -634,6 +810,112 @@ export default function ProfileView({
                 </div>
               ) : (
                 <>
+                  {/* Agentic ID (ERC-7857) Profile Card */}
+                  <div className="glass-panel" style={{
+                    padding: 24,
+                    background: 'linear-gradient(135deg, rgba(99, 102, 241, 0.05) 0%, rgba(168, 85, 247, 0.05) 100%)',
+                    border: '1px solid rgba(139, 92, 246, 0.2)',
+                    borderRadius: 20,
+                    marginBottom: 20,
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <Sparkles size={18} style={{ color: 'var(--accent)' }} />
+                        <div style={{ fontSize: 11, color: 'var(--text-faint)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: 1 }}>
+                          Sovereign Agentic ID (ERC-7857)
+                        </div>
+                      </div>
+                      <span style={{
+                        fontSize: 11, padding: '4px 10px', borderRadius: 20,
+                        background: hasAgenticId ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)',
+                        color: hasAgenticId ? 'var(--success)' : 'var(--error)',
+                        fontWeight: 800, textTransform: 'uppercase', letterSpacing: 1
+                      }}>
+                        {hasAgenticId ? 'Active' : 'Unregistered'}
+                      </span>
+                    </div>
+
+                    {hasAgenticId && agenticIdInfo ? (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                        <div style={{ fontSize: 13, color: 'var(--text-muted)', fontWeight: 600 }}>
+                          <span style={{ color: 'var(--text-faint)', fontWeight: 500 }}>Token ID:</span> #{agenticIdTokenId}
+                        </div>
+                        <div>
+                          <div style={{ fontSize: 11, color: 'var(--text-faint)', fontWeight: 800, textTransform: 'uppercase', marginBottom: 6, letterSpacing: 0.5 }}>
+                            Agent Capabilities / Prompt
+                          </div>
+                          <div style={{ padding: '14px 18px', background: 'var(--bg-primary)', borderRadius: 12, border: '1px solid var(--border)', fontSize: 14, color: 'var(--text)', fontWeight: 500 }}>
+                            {agenticIdInfo.dataDescription}
+                          </div>
+                        </div>
+                        <div>
+                          <div style={{ fontSize: 11, color: 'var(--text-faint)', fontWeight: 800, textTransform: 'uppercase', marginBottom: 6, letterSpacing: 0.5 }}>
+                            TEE/0G Storage Model Hash
+                          </div>
+                          <div style={{ fontFamily: 'monospace', fontSize: 12, padding: '10px 14px', background: 'var(--bg-primary)', borderRadius: 12, border: '1px solid var(--border)', color: 'var(--accent)', wordBreak: 'break-all' }}>
+                            {agenticIdInfo.dataHash}
+                          </div>
+                        </div>
+                        
+                        {isOwnProfile && (
+                          <div style={{ marginTop: 8 }}>
+                            <div style={{ display: 'flex', gap: 10 }}>
+                              <input 
+                                type="text"
+                                placeholder="Evolve agent capabilities / new memory state..."
+                                value={tempAgentDescription}
+                                onChange={e => setTempAgentDescription(e.target.value)}
+                                style={{
+                                  flex: 1, padding: '10px 16px', background: 'var(--surface)',
+                                  border: '1px solid var(--border)', borderRadius: 12, color: 'var(--text)',
+                                  fontSize: 13, outline: 'none', fontWeight: 600
+                                }}
+                              />
+                              <button 
+                                onClick={updateAgenticId}
+                                disabled={isUpdatingAgenticId || !tempAgentDescription}
+                                className="primary-btn"
+                                style={{ padding: '10px 20px', borderRadius: 12, fontSize: 13, fontWeight: 700 }}
+                              >
+                                {isUpdatingAgenticId ? 'Updating...' : 'Update Agent'}
+                              </button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <div>
+                        <p style={{ fontSize: 14, color: 'var(--text-muted)', lineHeight: 1.6, marginBottom: 16, fontWeight: 500 }}>
+                          This profile does not have a sovereign AI Agentic ID associated. 
+                          {isOwnProfile && " Mint your Agentic ID to secure your system prompt, persona, and memory state on-chain."}
+                        </p>
+                        
+                        {isOwnProfile && (
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                            <textarea
+                              placeholder="Define your Agentic ID's instructions (e.g. 'Autonomous AI assistant that reviews posts, responds to comments, and manages social vaults...')"
+                              value={tempAgentDescription}
+                              onChange={e => setTempAgentDescription(e.target.value)}
+                              style={{
+                                width: '100%', minHeight: 80, padding: 12, background: 'var(--surface)',
+                                border: '1px solid var(--border)', borderRadius: 12, color: 'var(--text)',
+                                fontSize: 13, outline: 'none', resize: 'vertical', lineHeight: 1.5, fontWeight: 500
+                              }}
+                            />
+                            <button
+                              onClick={mintAgenticId}
+                              disabled={isMintingAgenticId || !tempAgentDescription}
+                              className="primary-btn"
+                              style={{ padding: '12px 24px', borderRadius: 24, fontSize: 13, fontWeight: 800, alignSelf: 'flex-start' }}
+                            >
+                              {isMintingAgenticId ? 'Minting Agentic ID...' : 'Mint Sovereign Agentic ID'}
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+
                   <div>
                     <div style={{ fontSize: 11, color: 'var(--text-faint)', fontWeight: 800, textTransform: 'uppercase', marginBottom: 10, letterSpacing: 1 }}>Wallet Identity</div>
                     <div style={{

@@ -15,7 +15,7 @@ export default function Footer() {
           fontSize: 12, fontWeight: 700, color: 'var(--text-faint)',
           textTransform: 'uppercase', letterSpacing: 2, marginBottom: 16
         }}>
-          Built for <span style={{ color: 'var(--accent)', fontWeight: 800 }}>0G APAC Hackathon</span>
+          Built for <span style={{ color: 'var(--accent)', fontWeight: 800 }}>0G Bridge by AKINDO (Wave 3)</span>
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12 }}>
