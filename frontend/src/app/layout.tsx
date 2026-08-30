@@ -7,15 +7,33 @@ import LayoutWrapper from '@/components/LayoutWrapper';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'SocialVault — Decentralized Social on 0G Chain',
-  description: 'Post, like, and tip creators on the 0G decentralized storage network.',
+  metadataBase: new URL('https://0g-socialvault.vercel.app'),
+  title: 'SocialVault — Decentralized SocialFi on 0G Network',
+  description: 'Post, monetize, and verify on-chain social media anchored permanently to the 0G modular stack.',
+  applicationName: '0G SocialVault',
+  authors: [{ name: '0G SocialVault Team' }],
+  generator: 'Next.js 16',
+  keywords: ['0G', 'ZeroG', 'SocialFi', '0G Storage', '0G Chain', 'Web3 Social', 'Decentralized Storage', 'AKINDO'],
   openGraph: {
-    title: 'SocialVault',
-    description: 'Decentralized social feed on 0G Chain. All media stored on 0G Storage.',
-    images: ['/logo.png'],
+    title: 'SocialVault — Decentralized SocialFi on 0G Network',
+    description: 'Cryptographically anchored social feed on 0G Chain with media on 0G Storage Turbo nodes.',
+    url: 'https://0g-socialvault.vercel.app',
+    siteName: '0G SocialVault',
+    images: [
+      {
+        url: '/logo.png',
+        width: 800,
+        height: 800,
+        alt: '0G SocialVault Logo',
+      },
+    ],
+    locale: 'en_US',
+    type: 'website',
   },
   twitter: {
-    card: 'summary',
+    card: 'summary_large_image',
+    title: 'SocialVault — Decentralized SocialFi on 0G Network',
+    description: 'Cryptographically anchored social feed on 0G Chain with media on 0G Storage Turbo nodes.',
     images: ['/logo.png'],
   },
   icons: {

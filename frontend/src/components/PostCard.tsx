@@ -4,6 +4,8 @@ import Link from 'next/link';
 import MediaPreview from '@/components/MediaPreview';
 import ProfileAvatar from '@/components/ProfileAvatar';
 import TransactionLink from '@/components/TransactionLink';
+import ProofModal from '@/components/ProofModal';
+import { fireConfetti } from '@/lib/confetti';
 import { 
   Heart, 
   Zap, 
@@ -13,7 +15,8 @@ import {
   ShieldCheck, 
   Globe,
   FileText,
-  Loader2
+  Loader2,
+  ExternalLink
 } from 'lucide-react';
 
 const short = (a: string) => `${a.slice(0, 6)}...${a.slice(-4)}`;
@@ -42,6 +45,7 @@ export default function PostCard({
   const [authorName, setAuthorName] = useState<string | null>(null);
   const [isLikedOnChain, setIsLikedOnChain] = useState(false);
   const [isLiking, setIsLiking] = useState(false);
+  const [isProofOpen, setIsProofOpen] = useState(false);
 
   // 0G Pay USDC tipping states
   const [tipType, setTipType] = useState<'native' | 'usdc'>('native');
@@ -153,6 +157,7 @@ export default function PostCard({
       });
       await waitForTransactionReceipt(config, { hash: tipTx });
 
+      fireConfetti({ count: 80 });
       alert(`Successfully tipped ${usdcTipAmount} USDC to creator!`);
       loadUsdcBalance();
       
@@ -163,6 +168,11 @@ export default function PostCard({
     } finally {
       setIsTippingUSDC(false);
     }
+  };
+
+  const handleNativeTip = () => {
+    onTip();
+    fireConfetti({ count: 60 });
   };
 
   useEffect(() => {
@@ -341,13 +351,37 @@ export default function PostCard({
         padding: '10px 0 16px',
         borderTop: '1px solid var(--border)',
       }}>
-        <div>
-          <div style={{ color: 'var(--text-faint)', fontSize: 11, fontWeight: 800, textTransform: 'uppercase', letterSpacing: 0.8 }}>
-            Onchain Proof
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <div>
+            <div style={{ color: 'var(--text-faint)', fontSize: 11, fontWeight: 800, textTransform: 'uppercase', letterSpacing: 0.8 }}>
+              Onchain Proof
+            </div>
+            <div style={{ color: 'var(--text-muted)', fontSize: 12, marginTop: 2 }}>
+              Verify authenticity on 0G Mainnet
+            </div>
           </div>
-          <div style={{ color: 'var(--text-muted)', fontSize: 12, marginTop: 2 }}>
-            Verify authenticity on 0G Mainnet
-          </div>
+          <button
+            type="button"
+            onClick={() => setIsProofOpen(true)}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 5,
+              padding: '4px 10px',
+              borderRadius: 16,
+              background: 'rgba(16,185,129,0.1)',
+              border: '1px solid rgba(16,185,129,0.3)',
+              color: 'var(--success)',
+              fontSize: 11,
+              fontWeight: 700,
+              cursor: 'pointer',
+              transition: 'all 0.2s',
+            }}
+            title="Inspect 0G Merkle Proof & Storage Receipts"
+          >
+            <ShieldCheck size={12} />
+            <span>0G Merkle Proof</span>
+          </button>
         </div>
         <TransactionLink postId={post.id} author={post.author} />
       </div>
@@ -477,7 +511,7 @@ export default function PostCard({
                   }} />
                 </div>
                 <button 
-                  onClick={onTip} 
+                  onClick={handleNativeTip} 
                   disabled={!isConnected || isWrongNetwork || isTipping || Number(normalizedTip) <= 0} 
                   className="primary-btn" 
                   style={{
@@ -588,6 +622,16 @@ export default function PostCard({
         </div>
         <span style={{ marginLeft: 'auto', fontSize: 11, color: 'var(--text-faint)', fontFamily: 'monospace', fontWeight: 600 }}>#{post.id.toString()}</span>
       </div>
+
+      <ProofModal
+        isOpen={isProofOpen}
+        onClose={() => setIsProofOpen(false)}
+        postId={post.id}
+        author={post.author}
+        storageRootHash={post.storageRootHash}
+        metadataRootHash={post.metadataRootHash}
+        mediaType={mediaType}
+      />
     </div>
   );
 }

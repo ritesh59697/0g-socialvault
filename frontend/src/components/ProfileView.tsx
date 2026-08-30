@@ -17,8 +17,15 @@ import {
   Sparkles,
   Camera,
   CheckCircle2,
-  AlertCircle
+  AlertCircle,
+  Award,
+  Copy,
+  ExternalLink,
+  X,
+  ShieldCheck,
+  Share2
 } from 'lucide-react';
+import { fireConfetti } from '@/lib/confetti';
 
 const ZERO_G_LOGO = "https://pbs.twimg.com/profile_images/2038084529374867456/Oq74BA_I_400x400.jpg";
 
@@ -85,6 +92,10 @@ export default function ProfileView({
   const [isMintingAgenticId, setIsMintingAgenticId] = useState(false);
   const [isUpdatingAgenticId, setIsUpdatingAgenticId] = useState(false);
   const [tempAgentDescription, setTempAgentDescription] = useState('');
+
+  // 0G Creator Pass state
+  const [isPassOpen, setIsPassOpen] = useState(false);
+  const [copiedBadge, setCopiedBadge] = useState(false);
 
   // 0G Persistence
   useEffect(() => {
@@ -309,6 +320,8 @@ export default function ProfileView({
       localStorage.setItem(`sv_avatar_${addr}`, tempAvatarUrl);
       
       setIsEditing(false);
+      fireConfetti({ count: 70 });
+      alert('Profile updated and anchored to 0G Chain successfully!');
       window.dispatchEvent(new Event('sv_profile_updated'));
     } catch (e) {
       console.error('Failed to save profile:', e);
@@ -518,15 +531,37 @@ export default function ProfileView({
                     {isFollowing ? 'Unfollow' : 'Follow'}
                   </button>
                 )}
-                {isOwnProfile && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                   <button
-                    onClick={startEditing}
-                    className="secondary-btn"
-                    style={{ padding: '10px 20px', borderRadius: 24, fontSize: 13, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 8 }}
+                    onClick={() => {
+                      setIsPassOpen(true);
+                      fireConfetti({ count: 40 });
+                    }}
+                    className="primary-btn"
+                    style={{
+                      padding: '10px 18px',
+                      borderRadius: 24,
+                      fontSize: 13,
+                      fontWeight: 700,
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 6,
+                      background: 'linear-gradient(135deg, #7c3aed 0%, #ec4899 100%)',
+                    }}
                   >
-                    <Settings size={16} /> Edit Profile
+                    <Award size={15} /> 0G Creator Pass
                   </button>
-                )}
+
+                  {isOwnProfile && (
+                    <button
+                      onClick={startEditing}
+                      className="secondary-btn"
+                      style={{ padding: '10px 18px', borderRadius: 24, fontSize: 13, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 6 }}
+                    >
+                      <Settings size={15} /> Edit Profile
+                    </button>
+                  )}
+                </div>
               </div>
 
               <div style={{ display: 'flex', alignItems: 'center', gap: 20, marginTop: 14 }}>
@@ -954,6 +989,180 @@ export default function ProfileView({
                   </div>
                 </>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+      {/* 0G Creator Pass Holographic Modal */}
+      {isPassOpen && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+            backdropFilter: 'blur(10px)',
+            WebkitBackdropFilter: 'blur(10px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 99999,
+            padding: 16,
+          }}
+          onClick={() => setIsPassOpen(false)}
+        >
+          <div
+            className="glass-card"
+            style={{
+              width: '100%',
+              maxWidth: 520,
+              background: 'var(--bg-secondary)',
+              border: '1px solid var(--border)',
+              borderRadius: 24,
+              padding: 28,
+              boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.6)',
+              textAlign: 'center',
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 8 }}>
+              <button
+                onClick={() => setIsPassOpen(false)}
+                style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            {/* Pass Card Visual */}
+            <div
+              style={{
+                background: 'linear-gradient(135deg, #1e1b4b 0%, #311042 50%, #0f172a 100%)',
+                border: '1px solid rgba(236, 72, 153, 0.4)',
+                borderRadius: 20,
+                padding: 24,
+                position: 'relative',
+                overflow: 'hidden',
+                boxShadow: '0 12px 36px rgba(124, 58, 237, 0.25)',
+                marginBottom: 20,
+              }}
+            >
+              <div
+                style={{
+                  position: 'absolute',
+                  top: -40,
+                  right: -40,
+                  width: 140,
+                  height: 140,
+                  background: 'rgba(236, 72, 153, 0.3)',
+                  borderRadius: '50%',
+                  filter: 'blur(40px)',
+                }}
+              />
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+                <span style={{ fontSize: 12, fontWeight: 800, color: '#f43f5e', textTransform: 'uppercase', letterSpacing: 1.2 }}>
+                  0G Sovereign Creator Pass
+                </span>
+                <span
+                  style={{
+                    fontSize: 10,
+                    fontWeight: 800,
+                    background: 'rgba(16, 185, 129, 0.2)',
+                    color: '#10b981',
+                    padding: '3px 8px',
+                    borderRadius: 12,
+                  }}
+                >
+                  CHAIN 16661
+                </span>
+              </div>
+
+              <div style={{ display: 'flex', alignItems: 'center', gap: 16, textAlign: 'left', marginBottom: 16 }}>
+                <ProfileAvatar address={address} size={64} />
+                <div>
+                  <h4 style={{ margin: 0, fontSize: 18, fontWeight: 800, color: '#fff' }}>
+                    {username || '0G Creator'}
+                  </h4>
+                  <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.7)', fontFamily: 'monospace', marginTop: 2 }}>
+                    {short(address!)}
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 6, fontSize: 11, color: '#a7f3d0' }}>
+                    <ShieldCheck size={13} /> Anchored to 0G Modular Storage
+                  </div>
+                </div>
+              </div>
+
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: '1fr 1fr',
+                  gap: 8,
+                  background: 'rgba(0,0,0,0.3)',
+                  padding: 10,
+                  borderRadius: 12,
+                  fontSize: 11,
+                  textAlign: 'left',
+                }}
+              >
+                <div>
+                  <span style={{ color: 'rgba(255,255,255,0.6)' }}>Posts Anchored:</span>{' '}
+                  <strong style={{ color: '#fff' }}>{profilePosts.length}</strong>
+                </div>
+                <div>
+                  <span style={{ color: 'rgba(255,255,255,0.6)' }}>Tips Received:</span>{' '}
+                  <strong style={{ color: '#fff' }}>{formatEther(totalEarnings)} 0G</strong>
+                </div>
+              </div>
+            </div>
+
+            {/* Action buttons */}
+            <div style={{ display: 'flex', gap: 10 }}>
+              <button
+                onClick={() => {
+                  const badgeSnippet = `[![0G Creator Pass](https://0g-socialvault.vercel.app/logo.png)](https://0g-socialvault.vercel.app/profile/${address})`;
+                  navigator.clipboard.writeText(badgeSnippet);
+                  setCopiedBadge(true);
+                  setTimeout(() => setCopiedBadge(false), 2000);
+                }}
+                className="secondary-btn"
+                style={{
+                  flex: 1,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 6,
+                  padding: '10px 14px',
+                  borderRadius: 14,
+                  fontSize: 12,
+                  fontWeight: 700,
+                }}
+              >
+                {copiedBadge ? <CheckCircle2 size={15} color="#10b981" /> : <Copy size={15} />}
+                {copiedBadge ? 'Badge Snippet Copied!' : 'Copy Markdown Badge'}
+              </button>
+
+              <a
+                href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(
+                  `Check out my verified 0G Sovereign Creator profile on SocialVault! 🚀 All media anchored to 0G Storage nodes: https://0g-socialvault.vercel.app/profile/${address} @0G_labs #0G #ZeroG`
+                )}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="primary-btn"
+                style={{
+                  flex: 1,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 6,
+                  padding: '10px 14px',
+                  borderRadius: 14,
+                  fontSize: 12,
+                  fontWeight: 700,
+                  textDecoration: 'none',
+                  background: '#1d9bf0',
+                }}
+              >
+                <Share2 size={15} /> Share on X
+              </a>
             </div>
           </div>
         </div>

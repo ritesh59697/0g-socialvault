@@ -1,6 +1,7 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { formatFileSize } from '@/lib/storage';
 import ProfileAvatar from '@/components/ProfileAvatar';
+import { fireConfetti } from '@/lib/confetti';
 import { 
   ShieldCheck, 
   Image as ImageIcon, 
@@ -29,6 +30,12 @@ export default function CreatePost({
   aiStatus: string;
 }) {
   const fileRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (statusType === 'success') {
+      fireConfetti({ count: 75 });
+    }
+  }, [statusType]);
 
   const StatusIcon = () => {
     if (statusType === 'success') return <CheckCircle2 size={16} />;
