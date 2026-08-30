@@ -37,32 +37,32 @@ export default function Header({
         borderBottom: '1px solid var(--border)',
       }}>
         <div className="app-rail app-header-inner mobile-header-grid">
-          <button 
-            onClick={onToggleSidebar} 
-            className="secondary-btn" 
-            style={{ 
-              width: 40, height: 40, borderRadius: 12, padding: 0, 
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              cursor: 'pointer'
-            }}
-            title="Toggle Sidebar"
-          >
-            <Menu size={20} />
-          </button>
-          
-          <h1 className="header-title" style={{ 
-            fontSize: 18, 
-            fontWeight: 700, 
-            color: 'var(--text)', 
-            margin: 0,
-            position: 'absolute',
-            left: '50%',
-            transform: 'translateX(-50%)',
-            pointerEvents: 'none',
-            whiteSpace: 'nowrap'
-          }}>
-            {getPageTitle()}
-          </h1>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <button 
+              onClick={onToggleSidebar} 
+              className="secondary-btn" 
+              style={{ 
+                width: 40, height: 40, borderRadius: 12, padding: 0, 
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                cursor: 'pointer'
+              }}
+              title="Toggle Sidebar"
+            >
+              <Menu size={20} />
+            </button>
+            
+            {activeTab !== 'home' && (
+              <h1 style={{ 
+                fontSize: 16, 
+                fontWeight: 700, 
+                color: 'var(--text)', 
+                margin: 0,
+                whiteSpace: 'nowrap'
+              }}>
+                {getPageTitle()}
+              </h1>
+            )}
+          </div>
 
           <div className="mobile-only" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
             <button 
